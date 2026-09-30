@@ -1,4 +1,8 @@
-/* Thiết lập chung theo phong cách Midnight Minimalist */
+/* ==========================================
+   EDUPULSE 20 - THEME MIDNIGHT MINIMALIST
+   ========================================== */
+
+/* Thiết lập chung */
 * {
     box-sizing: border-box;
     margin: 0;
@@ -10,6 +14,7 @@ body {
     background-color: #001d2e; /* Xanh navy sâu thẳm */
     color: #eceff4; /* Chữ trắng bạc */
     min-height: 100vh;
+    min-height: 100dvh;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -21,7 +26,7 @@ body {
     padding: 20px;
 }
 
-/* Khung đăng nhập */
+/* KHUNG ĐĂNG NHẬP */
 .login-box {
     background-color: #121212; /* Nền tối sang trọng */
     border: 2px solid #d4af37; /* Viền vàng kim */
@@ -76,7 +81,7 @@ body {
 
 .input-group select:focus,
 .input-group input:focus {
-    border-color: #d4af37; /* Sáng lên màu vàng kim khi bấm vào */
+    border-color: #d4af37; /* Sáng lên màu vàng kim khi tương tác */
 }
 
 .input-group select:disabled,
@@ -85,7 +90,7 @@ body {
     cursor: not-allowed;
 }
 
-/* Nút bấm chính */
+/* NÚT BẤM CHÍNH */
 .primary-btn {
     width: 100%;
     padding: 14px;
@@ -111,16 +116,19 @@ body {
     cursor: not-allowed;
 }
 
-/* Màn hình chat chính (Khi học sinh đã vào lớp) */
+/* MÀN HÌNH CHAT CHÍNH (KHI VÀO LỚP HỌC) */
 #main-screen {
+    width: 100%;
     max-width: 700px;
     height: 90vh;
+    height: 90dvh;
     display: flex;
     flex-direction: column;
     background-color: #121212;
     border: 2px solid #d4af37;
     border-radius: 16px;
     overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
 }
 
 header {
@@ -136,6 +144,12 @@ header {
     display: flex;
     align-items: center;
     gap: 10px;
+}
+
+.user-info .name {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: #eceff4;
 }
 
 .badge {
@@ -155,6 +169,7 @@ header {
     border-radius: 6px;
     cursor: pointer;
     font-weight: 600;
+    transition: all 0.2s;
 }
 
 #logout-btn:hover {
@@ -162,6 +177,7 @@ header {
     color: #fff;
 }
 
+/* KHUNG CHAT */
 .chat-container {
     flex: 1;
     display: flex;
@@ -173,6 +189,7 @@ header {
     flex: 1;
     padding: 20px;
     overflow-y: auto;
+    scroll-behavior: smooth;
     display: flex;
     flex-direction: column;
     gap: 15px;
@@ -181,7 +198,7 @@ header {
 .message {
     display: flex;
     gap: 10px;
-    max-width: 80%;
+    max-width: 85%;
 }
 
 .ai-message {
@@ -194,8 +211,9 @@ header {
 }
 
 .message .avatar {
-    width: 36px;
-    height: 36px;
+    width: 38px;
+    height: 38px;
+    flex-shrink: 0;
     background-color: #1a2634;
     border-radius: 50%;
     display: flex;
@@ -210,8 +228,9 @@ header {
     padding: 12px 16px;
     border-radius: 12px;
     font-size: 0.95rem;
-    line-height: 1.4;
+    line-height: 1.5;
     color: #eceff4;
+    word-break: break-word;
 }
 
 .user-message .text {
@@ -220,266 +239,20 @@ header {
     font-weight: 600;
 }
 
-.input-area {
-    padding: 15px;
-    background-color: #001d2e;
-    display: flex;
-    gap: 10px;
-    border-top: 1px solid #2d3748;
-}
-
-.input-area textarea {
-    flex: 1;
-    background-color: #1a2634;
-    border: 1px solid #2d3748;
-    border-radius: 8px;
-    padding: 10px 15px;
-    color: #eceff4;
-    resize: none;
-    height: 45px;
-    outline: none;
-}
-
-.input-area textarea:focus {
-    border-color: #d4af37;
-}
-
-#send-btn {
-    background-color: #d4af37;
-    color: #001d2e;
-    border: none;
-    padding: 0 20px;
-    border-radius: 8px;
-    font-weight: 800;
-    cursor: pointer;
-    transition: opacity 0.2s;
-}
-
-#send-btn:hover {
-    opacity: 0.9;
-}
-/* Thiết lập chung theo phong cách Midnight Minimalist */
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    font-family: 'Nunito', sans-serif;
-}
-
-body {
-    background-color: #001d2e; /* Xanh navy sâu thẳm */
-    color: #eceff4; /* Chữ trắng bạc */
-    min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.screen {
-    width: 100%;
-    max-width: 480px;
-    padding: 20px;
-}
-
-/* Khung đăng nhập */
-.login-box {
-    background-color: #121212; /* Nền tối sang trọng */
-    border: 2px solid #d4af37; /* Viền vàng kim */
-    border-radius: 16px;
-    padding: 30px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
-}
-
-.logo {
-    text-align: center;
-    margin-bottom: 25px;
-}
-
-.logo h1 {
-    font-size: 2.2rem;
-    color: #eceff4;
-}
-
-.logo h1 span {
-    color: #d4af37; /* Điểm nhấn vàng kim */
-}
-
-.logo p {
+/* Hiệu ứng nhấp nháy khi AI đang suy nghĩ */
+.ai-message.loading .text {
+    font-style: italic;
     color: #a0aec0;
-    font-size: 0.95rem;
-    margin-top: 5px;
+    animation: pulse 1.5s infinite ease-in-out;
 }
 
-.input-group {
-    margin-bottom: 20px;
+@keyframes pulse {
+    0% { opacity: 0.5; }
+    50% { opacity: 1; }
+    100% { opacity: 0.5; }
 }
 
-.input-group label {
-    display: block;
-    font-weight: 600;
-    margin-bottom: 8px;
-    color: #d9e8fd;
-}
-
-.input-group select,
-.input-group input {
-    width: 100%;
-    padding: 12px 15px;
-    background-color: #1a2634;
-    border: 1px solid #2d3748;
-    border-radius: 8px;
-    color: #eceff4;
-    font-size: 1rem;
-    outline: none;
-    transition: border-color 0.3s;
-}
-
-.input-group select:focus,
-.input-group input:focus {
-    border-color: #d4af37; /* Sáng lên màu vàng kim khi bấm vào */
-}
-
-.input-group select:disabled,
-.input-group input:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-/* Nút bấm chính */
-.primary-btn {
-    width: 100%;
-    padding: 14px;
-    background: linear-gradient(135deg, #d4af37, #aa8c2c);
-    color: #001d2e;
-    border: none;
-    border-radius: 8px;
-    font-size: 1.1rem;
-    font-weight: 800;
-    cursor: pointer;
-    transition: transform 0.2s, opacity 0.2s;
-    margin-top: 10px;
-}
-
-.primary-btn:hover:not(:disabled) {
-    transform: translateY(-2px);
-    opacity: 0.9;
-}
-
-.primary-btn:disabled {
-    background: #2d3748;
-    color: #718096;
-    cursor: not-allowed;
-}
-
-/* Màn hình chat chính (Khi học sinh đã vào lớp) */
-#main-screen {
-    max-width: 700px;
-    height: 90vh;
-    display: flex;
-    flex-direction: column;
-    background-color: #121212;
-    border: 2px solid #d4af37;
-    border-radius: 16px;
-    overflow: hidden;
-}
-
-header {
-    background-color: #001d2e;
-    padding: 15px 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid #2d3748;
-}
-
-.user-info {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.badge {
-    background-color: #d4af37;
-    color: #001d2e;
-    padding: 3px 8px;
-    border-radius: 12px;
-    font-size: 0.8rem;
-    font-weight: 800;
-}
-
-#logout-btn {
-    background: transparent;
-    border: 1px solid #e53e3e;
-    color: #e53e3e;
-    padding: 6px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 600;
-}
-
-#logout-btn:hover {
-    background-color: #e53e3e;
-    color: #fff;
-}
-
-.chat-container {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-}
-
-.chat-box {
-    flex: 1;
-    padding: 20px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.message {
-    display: flex;
-    gap: 10px;
-    max-width: 80%;
-}
-
-.ai-message {
-    align-self: flex-start;
-}
-
-.user-message {
-    align-self: flex-end;
-    flex-direction: row-reverse;
-}
-
-.message .avatar {
-    width: 36px;
-    height: 36px;
-    background-color: #1a2634;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.2rem;
-    border: 1px solid #d4af37;
-}
-
-.message .text {
-    background-color: #1a2634;
-    padding: 12px 16px;
-    border-radius: 12px;
-    font-size: 0.95rem;
-    line-height: 1.4;
-    color: #eceff4;
-}
-
-.user-message .text {
-    background-color: #d4af37;
-    color: #001d2e;
-    font-weight: 600;
-}
-
+/* KHU VỰC NHẬP BÀI */
 .input-area {
     padding: 15px;
     background-color: #001d2e;
@@ -496,8 +269,9 @@ header {
     padding: 10px 15px;
     color: #eceff4;
     resize: none;
-    height: 45px;
+    height: 48px;
     outline: none;
+    font-size: 0.95rem;
 }
 
 .input-area textarea:focus {
@@ -512,9 +286,26 @@ header {
     border-radius: 8px;
     font-weight: 800;
     cursor: pointer;
-    transition: opacity 0.2s;
+    transition: opacity 0.2s, transform 0.1s;
 }
 
 #send-btn:hover {
     opacity: 0.9;
+}
+
+#send-btn:active {
+    transform: scale(0.96);
+}
+
+/* Tối ưu hóa cho di động */
+@media (max-width: 480px) {
+    #main-screen {
+        border-radius: 0;
+        height: 100vh;
+        height: 100dvh;
+        border: none;
+    }
+    .screen {
+        padding: 10px;
+    }
 }
