@@ -352,3 +352,40 @@ header {
         padding: 10px;
     }
 }
+/* ==========================================
+   CSS CHO MENU THỜI KHÓA BIỂU
+   ========================================== */
+.menu-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    margin-top: 10px;
+}
+
+.subject-card {
+    background-color: #1a2634;
+    border: 1px solid #2d3748;
+    border-radius: 12px;
+    padding: 20px 10px;
+    text-align: center;
+    text-decoration: none;
+    color: #eceff4;
+    font-weight: 800;
+    transition: all 0.3s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.subject-card:hover {
+    border-color: #d4af37;
+    transform: translateY(-3px);
+    box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2);
+    color: #d4af37;
+}
+
+.subject-card .icon {
+    font-size: 2.5rem;
+}
