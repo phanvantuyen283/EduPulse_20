@@ -217,7 +217,7 @@ document.getElementById('logout-btn').addEventListener('click', function() {
 // ==========================================
 // KẾT NỐI TRỢ LÝ AI (ĐÃ KHÓA SPAM & FORMAT MARKDOWN)
 // ==========================================
-const GAS_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbw959M8qHfxv61A59_7RuV2QwaVg3GHzIYsJfDUGnUm01D8NloE34gOyjaUbQChGisT/exec";
+const GAS_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbyvDbbrsdQbqsqTiOrbsuMWLM7DN4lN6AokgyaSrCN5KR_cUT_CJnOrYf05ED07e5bO/exec";
 
 async function guiCauHoiChoAI() {
     const text = userInput.value.trim();
