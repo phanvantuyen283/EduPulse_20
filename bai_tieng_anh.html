@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduPulse 20 - Bài tập Tiếng Anh</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* CSS riêng cho phần bài tập và chat AI */
+        .quiz-container { max-width: 800px; padding: 30px; }
+        .cau-hoi { background: #1a2634; border: 1px solid #2d3748; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        .de-bai { font-weight: 700; color: #d4af37; margin-bottom: 15px; font-size: 1.1rem; }
+        .lua-chon label { display: block; padding: 10px; background: #121212; border: 1px solid #2d3748; border-radius: 6px; margin-bottom: 8px; cursor: pointer; transition: 0.2s; }
+        .lua-chon label:hover { border-color: #d4af37; background: #202e40; }
+        .lua-chon input { margin-right: 10px; accent-color: #d4af37; }
+        
+        /* Khung Chat AI */
+        #chat-section { display: none; flex-direction: column; gap: 15px; margin-top: 30px; border-top: 2px dashed #4a5568; padding-top: 30px; }
+        .chat-bubble { padding: 15px 20px; border-radius: 12px; max-width: 85%; line-height: 1.5; font-size: 1.05rem; }
+        .ai-msg { background: #001d2e; border: 1px solid #d4af37; color: #eceff4; align-self: flex-start; border-bottom-left-radius: 0; }
+        .user-msg { background: #2d3748; color: #eceff4; align-self: flex-end; border-bottom-right-radius: 0; }
+    </style>
+</head>
+<body>
+
+    <div class="main-container quiz-container">
+        <!-- Nút quay lại -->
+        <button onclick="window.location.href='menu.html'" style="background:transparent; color:#a0aec0; border:none; cursor:pointer; margin-bottom: 20px; font-weight:600;">← Quay lại Menu</button>
+        
+        <h1 class="app-title" id="tieu-de-bai">Đang tải bài tập...</h1>
+        
+        <!-- KHU VỰC TRẮC NGHIỆM: Gắn thẻ data-mon ở đây -->
+        <div id="quiz-section" data-mon="tieng_anh">
+            <div id="danh-sach-cau-hoi">
+                <p style="color: #a0aec0; text-align:center;">Hệ thống đang đồng bộ đề thi từ Firebase...</p>
+            </div>
+            <button id="submit-quiz" class="primary-btn" style="display: none;">Nộp bài & Chữa bài cùng thầy AI</button>
+        </div>
+
+        <!-- KHU VỰC CHAT VẤN ĐÁP VỚI AI (ZPD) -->
+        <div id="chat-section">
+            <div id="chat-box" style="display: flex; flex-direction: column; gap: 10px;"></div>
+            <div class="input-group" style="display:flex; gap:10px; margin-bottom:0;">
+                <input type="text" id="chat-input" class="input-control" placeholder="Trò chuyện với thầy AI ở đây...">
+                <button id="send-chat" class="primary-btn" style="width:auto; margin-top:0;">Gửi</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gọi não bộ xử lý -->
+    <script type="module" src="app.js"></script>
+
+</body>
+</html>

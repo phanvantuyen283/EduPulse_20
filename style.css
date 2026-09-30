@@ -1,0 +1,221 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
+
+/* Reset cơ bản */
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Nunito', sans-serif; }
+
+/* Cấu trúc nền tảng Midnight Minimalist */
+body { 
+    background-color: #001d2e; 
+    color: #eceff4; 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    min-height: 100vh; 
+    padding: 20px; 
+}
+
+/* Khối Đăng nhập & Bảng làm bài */
+.main-container { 
+    background-color: #121212; 
+    border: 1px solid #2d3748; 
+    border-top: 4px solid #d4af37;
+    border-radius: 12px; 
+    padding: 40px; 
+    width: 100%; 
+    max-width: 550px; 
+    margin-top: 5vh; 
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5); 
+}
+
+/* Tiêu đề */
+.app-title { color: #d4af37; font-size: 2.2rem; text-align: center; margin-bottom: 5px; font-weight: 800; }
+.app-subtitle { color: #d9e8fd; font-size: 1rem; text-align: center; margin-bottom: 30px; opacity: 0.8; }
+
+/* Các ô nhập liệu */
+.input-group { margin-bottom: 20px; text-align: left; }
+.input-group label { display: block; margin-bottom: 8px; color: #a0aec0; font-weight: 600; }
+.input-control { 
+    width: 100%; 
+    padding: 14px; 
+    border-radius: 8px; 
+    border: 1px solid #2d3748; 
+    background: #1a2634; 
+    color: #eceff4; 
+    outline: none; 
+    font-size: 1rem; 
+    transition: 0.3s;
+}
+.input-control:focus { border-color: #d4af37; box-shadow: 0 0 8px rgba(212, 175, 55, 0.2); }
+
+/* Nút bấm Vàng kim */
+.primary-btn { 
+    width: 100%; 
+    padding: 15px; 
+    background: linear-gradient(135deg, #d4af37, #aa8c2c); 
+    color: #001d2e; 
+    border: none; 
+    border-radius: 8px; 
+    font-weight: 800; 
+    font-size: 1.1rem; 
+    cursor: pointer; 
+    transition: 0.2s; 
+    margin-top: 10px; 
+}
+.primary-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3); }
+.primary-btn:disabled { background: #4a5568; color: #a0aec0; cursor: not-allowed; transform: none; box-shadow: none; }
+
+/* Thông báo lỗi */
+.error-msg { color: #ff6b6b; margin-top: 15px; font-size: 0.95rem; text-align: center; display: none; font-weight: 600; }
+
+/* ==========================================
+   GIAO DIỆN TRẠM KHÁM PHÁ (menu.html)
+   ========================================== */
+.menu-container { max-width: 700px; padding: 40px 30px; }
+
+.subject-grid { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); 
+    gap: 20px; 
+    margin-top: 15px; 
+}
+
+/* Thẻ môn học */
+.subject-card { 
+    background: #1a2634; 
+    border: 1px solid #2d3748; 
+    border-radius: 12px; 
+    padding: 30px 15px; 
+    text-align: center; 
+    cursor: pointer; 
+    transition: all 0.3s ease; 
+    display: none; /* Ẩn đi chờ Firebase ra lệnh mới hiện */
+}
+
+.subject-card:hover { 
+    transform: translateY(-6px); 
+    border-color: #d4af37; 
+    box-shadow: 0 8px 20px rgba(212, 175, 55, 0.15); 
+    background: #202e40;
+}
+
+.card-icon { font-size: 3rem; margin-bottom: 15px; }
+.subject-card h3 { color: #eceff4; font-size: 1.3rem; margin-bottom: 5px; font-weight: 700; }
+.subject-card p { color: #a0aec0; font-size: 0.9rem; }
+
+/* Nút phụ (Đăng xuất) */
+.secondary-btn {
+    width: 100%; 
+    padding: 12px; 
+    background: transparent; 
+    color: #a0aec0; 
+    border: 1px solid #4a5568; 
+    border-radius: 8px; 
+    font-weight: 600; 
+    cursor: pointer; 
+    transition: 0.2s;
+    margin-top: 30px;
+}
+.secondary-btn:hover { background: #4a5568; color: #eceff4; }
+
+.loading-msg { text-align: center; color: #a0aec0; font-style: italic; margin: 20px 0; }
+
+/* ==========================================
+   GIAO DIỆN BÀI TẬP & CHAT AI ZPD (bai_*.html)
+   ========================================== */
+.quiz-container { max-width: 650px; width: 100%; }
+
+.cau-hoi {
+    background: #1a2634;
+    border: 1px solid #2d3748;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.de-bai {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #eceff4;
+    margin-bottom: 12px;
+}
+
+.lua-chon label {
+    display: block;
+    background: #121212;
+    border: 1px solid #2d3748;
+    padding: 10px 15px;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.lua-chon label:hover {
+    border-color: #d4af37;
+    background: #202e40;
+}
+
+.lua-chon input[type="radio"] {
+    margin-right: 10px;
+    accent-color: #d4af37;
+}
+
+/* Khung Chatbot Gia sư AI */
+#chat-section {
+    display: none; /* Hiện lên khi học sinh nộp bài */
+    flex-direction: column;
+    margin-top: 25px;
+    border-top: 2px dashed #2d3748;
+    padding-top: 20px;
+}
+
+#chat-box {
+    max-height: 350px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-right: 8px;
+    margin-bottom: 15px;
+}
+
+.chat-bubble {
+    max-width: 85%;
+    padding: 12px 16px;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    word-break: break-word;
+}
+
+.user-msg {
+    align-self: flex-end;
+    background: #d4af37;
+    color: #001d2e;
+    font-weight: 700;
+    border-bottom-right-radius: 2px;
+}
+
+.ai-msg {
+    align-self: flex-start;
+    background: #1a2634;
+    color: #eceff4;
+    border: 1px solid #2d3748;
+    border-bottom-left-radius: 2px;
+}
+
+.chat-input-group {
+    display: flex;
+    gap: 10px;
+}
+
+.chat-input-group input {
+    flex: 1;
+}
+
+.chat-input-group button {
+    width: auto;
+    padding: 0 20px;
+    margin-top: 0;
+}

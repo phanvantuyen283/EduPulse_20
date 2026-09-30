@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduPulse 20 - Trạm Khám Phá</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="main-container menu-container" id="menu-section">
+        <header style="text-align: center; margin-bottom: 30px;">
+            <h1 class="app-title">Trạm Khám Phá</h1>
+            <p class="app-subtitle" style="font-size: 1.1rem; margin-bottom: 10px;">
+                Chào mừng con, <span id="welcome-name" style="color: #d4af37; font-weight: 800;">Học sinh</span>!
+            </p>
+            <p style="color: #a0aec0;">Hôm nay con muốn chinh phục đỉnh cao nào?</p>
+        </header>
+
+        <!-- Thông báo chờ tải dữ liệu -->
+        <p id="loading-msg" class="loading-msg">Đang đồng bộ bài học từ máy chủ của thầy Tuyến...</p>
+
+        <!-- Danh sách môn học -->
+        <div class="subject-grid">
+            <div class="subject-card" id="card-toan" onclick="window.location.href='bai_toan.html'">
+                <div class="card-icon">📐</div>
+                <h3>Toán Học</h3>
+                <p>Tư duy & Con số</p>
+            </div>
+
+            <div class="subject-card" id="card-tieng-viet" onclick="window.location.href='bai_tieng_viet.html'">
+                <div class="card-icon">📖</div>
+                <h3>Tiếng Việt</h3>
+                <p>Vẻ đẹp ngôn từ</p>
+            </div>
+
+            <div class="subject-card" id="card-tieng-anh" onclick="window.location.href='bai_tieng_anh.html'">
+                <div class="card-icon">🌍</div>
+                <h3>Tiếng Anh</h3>
+                <p>Cửa sổ thế giới</p>
+            </div>
+        </div>
+
+        <button id="logout-btn" class="secondary-btn">🚪 Tạm biệt lớp học</button>
+    </div>
+
+    <!-- Gọi não bộ xử lý -->
+    <script type="module" src="app.js"></script>
+
+</body>
+</html>
