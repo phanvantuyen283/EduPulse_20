@@ -1,462 +1,363 @@
-/**
- * EDUPULSE 20 - CENTRAL CONTROLLER (app.js)
- * Single Clean Architecture: Firebase v10 + Dropdown 81 HS + AppHook Gemini AI
- */
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, query, where, getDocs, addDoc, serverTimestamp, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { 
+    getFirestore, doc, getDoc, collection, getDocs, query, where, addDoc, serverTimestamp 
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// ==========================================
-// 1. CẤU HÌNH HỆ THỐNG & API
-// ==========================================
+// 1. CẤU HÌNH FIREBASE
 const firebaseConfig = {
     apiKey: "AIzaSyDgPsOLRCLmzQAbC2eI0QX8gXLF7FicIzk",
     authDomain: "edupulse-20.firebaseapp.com",
-    projectId: "edupulse-20",
-    storageBucket: "edupulse-20.firebasestorage.app",
-    messagingSenderId: "895238045749",
-    appId: "1:895238045749:web:e6d7df1c4a2b2508a7717c"
+    projectId: "edupulse-20"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// Google Apps Script Webhook URL (AppHook Gemini AI)
-const GAS_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbyUWwqytElS6XjKjRlcuqHV6blM3RgyqpF_JUW9255uLscwOamZ6b8231kXSAOWCMV1/exec";
+// 2. DIỆN MẸO CHỐNG LỖI CORS: ĐƯỜNG DẪN WEB APP GOOGLE APPS SCRIPT
+// Lưu ý: Thay URL bên dưới bằng URL Exec Web App mới nhất của thầy
+const GAS_URL = "https://script.google.com/macros/s/AKfycbyUwwqytE1S6XjKjRlcuqHV6b1M3RgyqpF/exec";
 
-let conversationHistory = [];
-
-// ==========================================
-// 2. DANH SÁCH 81 HỌC SINH 4B1 & 4B2 (PIN MẶC ĐỊNH 1234)
-// ==========================================
-const DANH_SACH_HOC_SINH = [
-  // LỚP 4B1 (40 học sinh)
-  { "lop": "4B1", "hoTen": "Đặng Tâm An", "pin": "1234" },
-  { "lop": "4B1", "hoTen": "Nguyễn Khánh An", "pin": "1234" },
-  { "lop": "4B1", "hoTen": "Đặng Lan Anh", "pin": "1234" },
-  { "lop": "4B1", "hoTen": "Đặng Thị Ngọc Anh", "pin": "1234" },
-  { "lop": "4B1", "hoTen": "Lê Hoàng Anh", "pin": "1234" },
-  { "lop": "4B1", "hoTen": "Mai Diệp Ánh", "pin": "1234" },
-  { "lop": "4B1", "hoTen": "Vũ Chính Bảo", "pin": "1234" },
-  { "lop": "4B1", "hoTen": "Nguyễn Thị Kim Chi", "pin": "1234" },
-  { "lop": "4B1", "hoTen": "Vũ Ngọc Phương Chi", "pin": "1234" },
-  { "lop": "4B1", "hoTen": "Nguyễn Thùy Dương", "pin": "1234" },
-  { "lop": "4B1", "hoTen": "Lê Quốc Đại", "pin": "1234" },
-  { "lop": "4B1", "hoTen": "Đặng Danh Đạt", "pin": "1234" },
-  { "lop": "4B1", "hoTen": "Lê Gia Hân", "pin": "1234" },
-  { "lop": "4B1", "hoTen": "Nguyễn Lê Gia Hân", "pin": "1234" },
-  { "lop": "4B1", "hoTen": "Nguyễn Lê Ngọc Hân", "pin": "1234" },
-  { "lop": "4B1", "hoTen": "Lê Thị Hải Hậu", "pin": "1234" },
-  { "lop": "4B1", "hoTen": "Lê Trung Hiếu", "pin": "1234" },
-  { "lop": "4B1", "hoTen": "Vũ Minh Hiếu", "pin": "1234" },
-  { "lop": "4B1", "hoTen": "Đặng Gia Hưng", "pin": "1234" },
-  { "lop": "4B1", "hoTen": "Lê Thị Thu Hương", "pin": "1234" },
-  { "lop": "4B1", "hoTen": "Mai Thị Quỳnh Hương", "pin": "1234" },
-  { "lop": "4B1", "hoTen": "Lê Nguyễn Hoàng Khang", "pin": "1234" },
-  { "lop": "4B1", "hoTen": "Nguyễn Duy Khánh", "pin": "1234" },
-  { "lop": "4B1", "hoTen": "Nguyễn Chí Kiệt", "pin": "1234" },
-  { "lop": "4B1", "hoTen": "Ngô Diệp Chi Mai", "pin": "1234" },
-  { "lop": "4B1", "hoTen": "Lê Vũ Hà My", "pin": "1234" },
-  { "lop": "4B1", "hoTen": "Trần Hà My", "pin": "1234" },
-  { "lop": "4B1", "hoTen": "Lê Huy Nghiêm", "pin": "1234" },
-  { "lop": "4B1", "hoTen": "Lê Thị Yến Nhi", "pin": "1234" },
-  { "lop": "4B1", "hoTen": "Nguyễn Đức Phát", "pin": "1234" },
-  { "lop": "4B1", "hoTen": "Lê Anh Quân", "pin": "1234" },
-  { "lop": "4B1", "hoTen": "Nguyễn Thị Như Quỳnh", "pin": "1234" },
-  { "lop": "4B1", "hoTen": "Nguyễn Thị Phương Thảo", "pin": "1234" },
-  { "lop": "4B1", "hoTen": "Nguyễn Anh Thư", "pin": "1234" },
-  { "lop": "4B1", "hoTen": "Lê Thị Thu Trang", "pin": "1234" },
-  { "lop": "4B1", "hoTen": "Vũ Hữu Trọng", "pin": "1234" },
-  { "lop": "4B1", "hoTen": "Lê Anh Tuấn", "pin": "1234" },
-  { "lop": "4B1", "hoTen": "Nguyễn Thị Bảo Uyên", "pin": "1234" },
-  { "lop": "4B1", "hoTen": "Lê Huy Xuân", "pin": "1234" },
-  { "lop": "4B1", "hoTen": "Trịnh Thị Út", "pin": "1234" },
-
-  // LỚP 4B2 (41 học sinh + Giáo viên)
-  { "lop": "4B2", "hoTen": "Nguyễn Đăng Hải An", "pin": "1234" },
-  { "lop": "4B2", "hoTen": "Lê Đức Anh", "pin": "1234" },
-  { "lop": "4B2", "hoTen": "Nguyễn Thị Lan Anh", "pin": "1234" },
-  { "lop": "4B2", "hoTen": "Lê Văn Cương", "pin": "1234" },
-  { "lop": "4B2", "hoTen": "Phan Trí Cường", "pin": "1234" },
-  { "lop": "4B2", "hoTen": "Vũ Quốc Cường", "pin": "1234" },
-  { "lop": "4B2", "hoTen": "Ngô Anh Dũng", "pin": "1234" },
-  { "lop": "4B2", "hoTen": "Vũ Đức Duy", "pin": "1234" },
-  { "lop": "4B2", "hoTen": "Đào Hương Giang", "pin": "1234" },
-  { "lop": "4B2", "hoTen": "Đào Ngân Hà", "pin": "1234" },
-  { "lop": "4B2", "hoTen": "Nguyễn Thị Hằng", "pin": "1234" },
-  { "lop": "4B2", "hoTen": "Nguyễn Minh Hiếu", "pin": "1234" },
-  { "lop": "4B2", "hoTen": "Vũ Đình Minh Hiếu", "pin": "1234" },
-  { "lop": "4B2", "hoTen": "Nguyễn Thị Ngọc Hoa", "pin": "1234" },
-  { "lop": "4B2", "hoTen": "Lê Huy Hoàng", "pin": "1234" },
-  { "lop": "4B2", "hoTen": "Lê Văn Huy", "pin": "1234" },
-  { "lop": "4B2", "hoTen": "Nguyễn Gia Hưng", "pin": "1234" },
-  { "lop": "4B2", "hoTen": "Lê Vũ Bảo Khánh", "pin": "1234" },
-  { "lop": "4B2", "hoTen": "Phan Đức Kiên", "pin": "1234" },
-  { "lop": "4B2", "hoTen": "Đặng Thị Khánh Ly", "pin": "1234" },
-  { "lop": "4B2", "hoTen": "Nguyễn Chí Minh", "pin": "1234" },
-  { "lop": "4B2", "hoTen": "Nguyễn Quang Minh", "pin": "1234" },
-  { "lop": "4B2", "hoTen": "Dương Hà My", "pin": "1234" },
-  { "lop": "4B2", "hoTen": "Nguyễn Thị Ánh My", "pin": "1234" },
-  { "lop": "4B2", "hoTen": "Nguyễn Thị Trà My", "pin": "1234" },
-  { "lop": "4B2", "hoTen": "Nguyễn Vũ Chí Nam", "pin": "1234" },
-  { "lop": "4B2", "hoTen": "Trịnh Nguyễn Nhật Nam", "pin": "1234" },
-  { "lop": "4B2", "hoTen": "Nguyễn Thị Thanh Ngân", "pin": "1234" },
-  { "lop": "4B2", "hoTen": "Nguyễn Thị Ngọc", "pin": "1234" },
-  { "lop": "4B2", "hoTen": "Đặng Kiều Oanh", "pin": "1234" },
-  { "lop": "4B2", "hoTen": "Đặng Thanh Phong", "pin": "1234" },
-  { "lop": "4B2", "hoTen": "Hoàng Công Thiên Phúc", "pin": "1234" },
-  { "lop": "4B2", "hoTen": "Vũ Minh Quang", "pin": "1234" },
-  { "lop": "4B2", "hoTen": "Đặng Tiến Thành", "pin": "1234" },
-  { "lop": "4B2", "hoTen": "Lương Công Thành", "pin": "1234" },
-  { "lop": "4B2", "hoTen": "Nguyễn Kiều Phương Thảo", "pin": "1234" },
-  { "lop": "4B2", "hoTen": "Nguyễn Thị Phương Thùy", "pin": "1234" },
-  { "lop": "4B2", "hoTen": "Lê Bảo Trâm", "pin": "1234" },
-  { "lop": "4B2", "hoTen": "Đặng Phương Trinh", "pin": "1234" },
-  { "lop": "4B2", "hoTen": "Đặng Thanh Trúc", "pin": "1234" },
-  { "lop": "4B2", "hoTen": "Giáo Viên", "pin": "1234" }
-];
-
-// ==========================================
-// 3. ĐỒNG BỘ DỮ LIỆU & ĐỊNH TUYẾN TRANG
-// ==========================================
-async function autoSyncStudentsToFirebase() {
-    try {
-        const snapshot = await getDocs(collection(db, "hoc_sinh"));
-        if (snapshot.empty) {
-            console.log("Đang tự động nạp 81 học sinh lên Firebase...");
-            for (const hs of DANH_SACH_HOC_SINH) {
-                await addDoc(collection(db, "hoc_sinh"), hs);
-            }
-            console.log("Tự động nạp thành công 81 học sinh!");
-        }
-    } catch (e) {
-        console.error("Lỗi tự động đồng bộ Firebase:", e);
-    }
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    autoSyncStudentsToFirebase();
-
-    if (document.getElementById('login-section')) {
-        initLoginController();
-    }
-    
-    if (document.getElementById('menu-section')) {
-        initMenuController();
-    }
-
-    if (document.getElementById('quiz-section')) {
-        initQuizController();
-    }
+// 3. ĐIỀU HƯỚNG THEO TRANG (ROUTER)
+document.addEventListener("DOMContentLoaded", () => {
+    if (document.getElementById("login-section")) initLoginController();
+    if (document.getElementById("menu-section")) initMenuController();
+    if (document.getElementById("quiz-section")) initQuizController();
 });
 
 // ==========================================
-// 4. LOGIC ĐĂNG NHẬP & MENU TÊN ĐỘNG
+// A. BỘ ĐIỀU KHIỂN ĐĂNG NHẬP (index.html)
 // ==========================================
 function initLoginController() {
-    const classSelect = document.getElementById('student-class');
-    const nameSelect = document.getElementById('student-name');
-    const loginBtn = document.getElementById('login-btn');
-    const errorMsg = document.getElementById('error-message');
-    const studentPinInput = document.getElementById('student-pin');
+    const loginBtn = document.getElementById("login-btn");
+    const nameInput = document.getElementById("student-name");
+    const pinInput = document.getElementById("pin-code");
+    const errorMsg = document.getElementById("error-msg");
 
     if (!loginBtn) return;
 
-    function loadNameDropdown(selectedClass) {
-        if (!nameSelect) return;
-        nameSelect.innerHTML = '<option value="">-- Chọn tên của con --</option>';
-        const filtered = DANH_SACH_HOC_SINH.filter(hs => hs.lop === selectedClass);
-        
-        filtered.forEach(hs => {
-            const opt = document.createElement('option');
-            opt.value = hs.hoTen;
-            opt.textContent = hs.hoTen;
-            nameSelect.appendChild(opt);
-        });
-    }
+    loginBtn.addEventListener("click", async () => {
+        const hoTen = nameInput.value.trim();
+        const pin = pinInput.value.trim();
 
-    if (classSelect) {
-        loadNameDropdown(classSelect.value);
-        classSelect.addEventListener('change', (e) => loadNameDropdown(e.target.value));
-    }
-
-    loginBtn.addEventListener('click', async () => {
-        const lop = classSelect ? classSelect.value : "4B1";
-        const hoTen = nameSelect ? nameSelect.value : "";
-        const pin = studentPinInput ? studentPinInput.value.trim() : "";
-
-        if (!hoTen) {
-            hienThiLoi(errorMsg, "Con nhớ chọn Họ và Tên nhé!");
+        if (!hoTen || !pin) {
+            showError("Con hãy điền đầy đủ Họ tên và Mã PIN nhé!");
             return;
         }
 
-        if (!pin) {
-            hienThiLoi(errorMsg, "Con nhớ nhập Mã PIN nhé!");
-            return;
-        }
+        loginBtn.disabled = true;
+        loginBtn.innerText = "Đang kiểm tra...";
 
         try {
-            loginBtn.innerText = "Đang kiểm tra...";
-            loginBtn.disabled = true;
+            const q = query(collection(db, "hoc_sinh"), where("hoTen", "==", hoTen), where("pin", "==", pin));
+            const snap = await getDocs(q);
 
-            const q = query(
-                collection(db, "hoc_sinh"), 
-                where("lop", "==", lop), 
-                where("hoTen", "==", hoTen)
-            );
-            
-            const snapshot = await getDocs(q);
+            if (!snap.empty) {
+                const userDoc = snap.docs[0];
+                const userData = userDoc.data();
+                
+                // Lưu thông tin học sinh vào Session Browser
+                localStorage.setItem("currentUser", JSON.stringify({
+                    id: userDoc.id,
+                    hoTen: userData.hoTen,
+                    lop: userData.lop
+                }));
 
-            if (!snapshot.empty) {
-                const studentData = snapshot.docs[0].data();
-                if (String(studentData.pin).trim() === pin) {
-                    localStorage.setItem("eduPulse_hoTen", studentData.hoTen);
-                    localStorage.setItem("eduPulse_lop", studentData.lop);
-                    window.location.href = "menu.html";
-                    return;
-                }
-            }
-            
-            const localStudent = DANH_SACH_HOC_SINH.find(hs => hs.lop === lop && hs.hoTen === hoTen);
-            if (localStudent && localStudent.pin === pin) {
-                localStorage.setItem("eduPulse_hoTen", localStudent.hoTen);
-                localStorage.setItem("eduPulse_lop", localStudent.lop);
                 window.location.href = "menu.html";
             } else {
-                hienThiLoi(errorMsg, "Mã PIN chưa chính xác (Mặc định là 1234)!");
+                showError("Mã PIN hoặc Họ tên chưa đúng, con kiểm tra lại nhé!");
             }
-
-        } catch (error) {
-            console.error("Lỗi đăng nhập: ", error);
-            hienThiLoi(errorMsg, "Hệ thống đang bận, con thử lại sau nhé!");
+        } catch (err) {
+            console.error("Lỗi đăng nhập:", err);
+            showError("Kết nối máy chủ thất bại, con thử lại sau giây lát!");
         } finally {
-            loginBtn.innerText = "Vào Lớp Học";
             loginBtn.disabled = false;
+            loginBtn.innerText = "Vào Lớp Học";
         }
     });
 
-    if (studentPinInput) {
-        studentPinInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') loginBtn.click();
-        });
+    function showError(msg) {
+        errorMsg.innerText = msg;
+        errorMsg.style.display = "block";
     }
 }
 
-function hienThiLoi(element, thongBao) {
-    if (!element) return;
-    element.innerText = thongBao;
-    element.style.display = "block";
-    setTimeout(() => { element.style.display = "none"; }, 4000);
-}
-
 // ==========================================
-// 5. LOGIC TRANG MENU (menu.html)
+// B. BỘ ĐIỀU KHIỂN TRẠM KHÁM PHÁ (menu.html)
 // ==========================================
-function initMenuController() {
-    const tenHocSinh = localStorage.getItem("eduPulse_hoTen");
-    if (!tenHocSinh) {
+async function initMenuController() {
+    const currentUserStr = localStorage.getItem("currentUser");
+    if (!currentUserStr) {
         window.location.href = "index.html";
         return;
     }
 
-    const welcomeEl = document.getElementById('welcome-name');
-    if (welcomeEl) welcomeEl.innerText = tenHocSinh;
+    const currentUser = JSON.parse(currentUserStr);
+    const welcomeName = document.getElementById("welcome-name");
+    const loadingMsg = document.getElementById("loading-msg");
+    const logoutBtn = document.getElementById("logout-btn");
 
-    async function dongBoLichHoc() {
-        try {
-            const docRef = doc(db, "cau_hinh", "trang_thai_mon");
-            const snap = await getDoc(docRef);
-            
-            const loadingMsg = document.getElementById('loading-msg');
-            if (loadingMsg) loadingMsg.style.display = 'none';
+    if (welcomeName) welcomeName.innerText = currentUser.hoTen;
 
-            if (snap.exists()) {
-                const data = snap.data();
-                const cardToan = document.getElementById('card-toan');
-                const cardTiengViet = document.getElementById('card-tieng-viet');
-                const cardTiengAnh = document.getElementById('card-tieng-anh');
-
-                if (cardToan) cardToan.style.display = data.toan ? 'block' : 'none';
-                if (cardTiengViet) cardTiengViet.style.display = data.tiengViet ? 'block' : 'none';
-                if (cardTiengAnh) cardTiengAnh.style.display = data.tiengAnh ? 'block' : 'none';
-            }
-        } catch (error) {
-            console.error("Lỗi đồng bộ cấu hình: ", error);
-        }
-    }
-
-    dongBoLichHoc();
-
-    const logoutBtn = document.getElementById('logout-btn');
+    // Xử lý Đăng xuất
     if (logoutBtn) {
-        logoutBtn.addEventListener('click', () => {
-            localStorage.clear();
+        logoutBtn.addEventListener("click", () => {
+            localStorage.removeItem("currentUser");
             window.location.href = "index.html";
         });
+    }
+
+    // Đọc trạng thái Bật/Tắt môn học từ Firestore
+    try {
+        const docRef = doc(db, "cau_hinh", "trang_thai_mon");
+        const snap = await getDoc(docRef);
+
+        if (snap.exists()) {
+            const config = snap.data();
+            setCardVisibility("card-toan", config.toan ?? true);
+            setCardVisibility("card-tieng-viet", config.tiengViet ?? true);
+            setCardVisibility("card-tieng-anh", config.tiengAnh ?? true);
+        } else {
+            // Mặc định hiện tất cả nếu chưa có cấu hình
+            setCardVisibility("card-toan", true);
+            setCardVisibility("card-tieng-viet", true);
+            setCardVisibility("card-tieng-anh", true);
+        }
+    } catch (err) {
+        console.error("Lỗi nạp cấu hình môn:", err);
+    } finally {
+        if (loadingMsg) loadingMsg.style.display = "none";
+    }
+
+    function setCardVisibility(cardId, isVisible) {
+        const el = document.getElementById(cardId);
+        if (el) el.style.display = isVisible ? "block" : "none";
     }
 }
 
 // ==========================================
-// 6. LOGIC BÀI TẬP & GIA SƯ AI (APPHOOK WEBHOOK)
+// C. BỘ ĐIỀU KHIỂN BÀI TẬP & GIA SƯ AI (bai_*.html)
 // ==========================================
 async function initQuizController() {
-    const tenHocSinh = localStorage.getItem("eduPulse_hoTen");
-    if (!tenHocSinh) { window.location.href = "index.html"; return; }
+    const currentUserStr = localStorage.getItem("currentUser");
+    if (!currentUserStr) {
+        window.location.href = "index.html";
+        return;
+    }
+    const currentUser = JSON.parse(currentUserStr);
 
-    const quizSection = document.getElementById('quiz-section');
-    const containerCauHoi = document.getElementById('danh-sach-cau-hoi');
-    const btnSubmit = document.getElementById('submit-quiz');
-    
-    if (!quizSection || !containerCauHoi) return;
+    const quizSection = document.getElementById("quiz-section");
+    const monHoc = quizSection ? quizSection.getAttribute("data-mon") : null;
+    const tieuDeBai = document.getElementById("tieu-de-bai");
+    const danhSachCauHoiEl = document.getElementById("danh-sach-cau-hoi");
+    const submitBtn = document.getElementById("submit-quiz");
+    const chatSection = document.getElementById("chat-section");
+    const chatBox = document.getElementById("chat-box");
+    const chatInput = document.getElementById("chat-input");
+    const sendChatBtn = document.getElementById("send-chat");
 
-    const monHocDocId = quizSection.getAttribute('data-mon') || "toan"; 
-    let thongTinBaiHoc = "";
-    let duLieuDeThi = [];
+    if (!monHoc) return;
 
+    let danhSachCauHoi = [];
+    let baiHocTitle = "";
+
+    // 1. Tải ngân hàng đề thi
     try {
-        const docRef = doc(db, "ngan_hang_de", monHocDocId);
-        const snap = await getDoc(docRef);
-        
-        if (snap.exists() && snap.data().danhSachCauHoi) {
+        const snap = await getDoc(doc(db, "ngan_hang_de", monHoc));
+        if (snap.exists()) {
             const data = snap.data();
-            thongTinBaiHoc = data.thongTinBaiHoc || "";
-            duLieuDeThi = data.danhSachCauHoi || [];
+            baiHocTitle = data.thongTinBaiHoc || "Bài luyện tập";
+            danhSachCauHoi = data.danhSachCauHoi || [];
             
-            const tieuDeEl = document.getElementById('tieu-de-bai');
-            if (tieuDeEl) tieuDeEl.innerText = "Bài tập " + monHocDocId.toUpperCase();
-            
-            let fullHtml = "";
-            duLieuDeThi.forEach((cau, index) => {
-                fullHtml += `
-                    <div class="cau-hoi" id="cau-${index}" data-dap-an="${cau.dapAnDung}">
-                        <p class="de-bai">Câu ${cau.cauSo}: ${cau.deBai}</p>
-                        <div class="lua-chon">
-                `;
-                for (const [key, value] of Object.entries(cau.luaChon)) {
-                    fullHtml += `<label><input type="radio" name="chon_${index}" value="${key}"> ${key}. ${value}</label>`;
-                }
-                fullHtml += `</div></div>`;
-            });
-            
-            containerCauHoi.innerHTML = fullHtml;
-            if (btnSubmit) btnSubmit.style.display = "block";
+            if (tieuDeBai) tieuDeBai.innerText = baiHocTitle;
+            renderQuiz(danhSachCauHoi);
+            if (submitBtn) submitBtn.style.display = "block";
         } else {
-            containerCauHoi.innerHTML = "<p style='color:#ff6b6b;'>Thầy chưa nạp đề thi cho môn này. Con quay lại sau nhé!</p>";
+            if (danhSachCauHoiEl) danhSachCauHoiEl.innerHTML = `<p style="text-align:center; color:#ff6b6b;">Chưa có đề thi cho môn này.</p>`;
         }
-    } catch (error) {
-        console.error("Lỗi tải đề: ", error);
-        containerCauHoi.innerHTML = "<p style='color:#ff6b6b;'>Không thể tải bài tập. Con báo thầy Tuyến hỗ trợ nhé!</p>";
+    } catch (err) {
+        console.error("Lỗi nạp đề thi:", err);
+        if (danhSachCauHoiEl) danhSachCauHoiEl.innerHTML = `<p style="text-align:center; color:#ff6b6b;">Không thể tải dữ liệu đề thi.</p>`;
     }
 
-    if (btnSubmit) {
-        btnSubmit.addEventListener('click', async () => {
-            let soCauDung = 0;
-            let tongHopBaiLam = "";
-            let chiTietLuuFirebase = [];
-            
-            duLieuDeThi.forEach((cau, index) => {
-                const theCauHoi = document.getElementById(`cau-${index}`);
-                const luaChon = theCauHoi ? theCauHoi.querySelector('input[type="radio"]:checked') : null;
-                const dapAnHocSinh = luaChon ? luaChon.value : "Bỏ trống";
-                const dapAnDung = theCauHoi ? theCauHoi.getAttribute('data-dap-an') : cau.dapAnDung;
-                
-                const trangThai = (dapAnHocSinh === dapAnDung) ? "ĐÚNG" : "SAI";
-                if (trangThai === "ĐÚNG") soCauDung++;
+    // Render danh sách câu hỏi
+    function renderQuiz(questions) {
+        if (!danhSachCauHoiEl) return;
+        danhSachCauHoiEl.innerHTML = "";
 
-                tongHopBaiLam += `Câu ${cau.cauSo}: ${cau.deBai}\n- Đáp án đúng: ${dapAnDung}. Con chọn: ${dapAnHocSinh} (${trangThai})\n\n`;
-                
-                chiTietLuuFirebase.push({
-                    cauSo: cau.cauSo,
-                    dapAnDung: dapAnDung,
-                    hocSinhChon: dapAnHocSinh,
-                    ketQua: trangThai
+        questions.forEach((q, index) => {
+            const qDiv = document.createElement("div");
+            qDiv.className = "cau-hoi";
+            
+            let htmlOptions = "";
+            q.cacLuaChon.forEach((opt) => {
+                const optKey = opt.trim().substring(0, 1); // Lấy chữ cái A, B, C, D
+                htmlOptions += `
+                    <label>
+                        <input type="radio" name="cau_${q.id}" value="${optKey}">
+                        ${opt}
+                    </label>
+                `;
+            });
+
+            qDiv.innerHTML = `
+                <div class="de-bai">Câu ${index + 1}: ${q.cauHoi}</div>
+                <div class="lua-chon">${htmlOptions}</div>
+            `;
+            danhSachCauHoiEl.appendChild(qDiv);
+        });
+    }
+
+    // 2. Xử lý Nộp bài & Đánh giá ZPD
+    if (submitBtn) {
+        submitBtn.addEventListener("click", async () => {
+            let diemSo = 0;
+            const chiTietLamBai = [];
+
+            danhSachCauHoi.forEach((q) => {
+                const selectedInput = document.querySelector(`input[name="cau_${q.id}"]:checked`);
+                const answerUser = selectedInput ? selectedInput.value : "Chưa chọn";
+                const isCorrect = (answerUser === q.dapAnDung);
+
+                if (isCorrect) diemSo++;
+
+                chiTietLamBai.push({
+                    cauHoi: q.cauHoi,
+                    dapAnHocSinh: answerUser,
+                    dapAnDung: q.dapAnDung,
+                    laDapAnDung: isCorrect
                 });
             });
 
-            const duLieuLuuDB = {
-                hocSinh: tenHocSinh,
-                lop: localStorage.getItem("eduPulse_lop") || "4B1",
-                monHoc: monHocDocId,
-                diemSo: soCauDung,
-                tongSoCau: duLieuDeThi.length,
-                chiTietLamBai: chiTietLuuFirebase,
-                thoiGianNop: serverTimestamp()
-            };
-            
+            // Vô hiệu hóa nút sau khi nộp
+            submitBtn.disabled = true;
+            submitBtn.innerText = "Đã Nộp Bài";
+
+            // Khóa lựa chọn trắc nghiệm
+            const allRadios = document.querySelectorAll('input[type="radio"]');
+            allRadios.forEach(r => r.disabled = true);
+
+            // Lưu kết quả vào Firestore
             try {
-                await addDoc(collection(db, "ket_qua_hoc_tap"), duLieuLuuDB);
-            } catch (err) {
-                console.error("Lỗi lưu điểm: ", err);
+                await addDoc(collection(db, "ket_qua_hoc_tap"), {
+                    hocSinh: currentUser.hoTen,
+                    lop: currentUser.lop,
+                    monHoc: monHoc,
+                    diemSo: diemSo,
+                    tongSoCau: danhSachCauHoi.length,
+                    chiTietLamBai: chiTietLamBai,
+                    thoiGianNop: serverTimestamp()
+                });
+            } catch (e) {
+                console.error("Lỗi lưu kết quả:", e);
             }
 
-            btnSubmit.style.display = 'none';
-            const chatSection = document.getElementById('chat-section');
-            if (chatSection) chatSection.style.display = 'flex';
+            // Hiện khung Chatbot Gia sư AI ZPD
+            if (chatSection) chatSection.style.display = "flex";
 
-            const heThongBaoCao = `HỆ THỐNG BÁO CÁO: Học sinh vừa nộp bài môn ${monHocDocId}. Điểm: ${soCauDung}/${duLieuDeThi.length}.
-Mục tiêu bài học: ${thongTinBaiHoc}
-CHI TIẾT BÀI LÀM:
-${tongHopBaiLam}
-Dựa vào đây, hãy khen ngợi, nhắc nhở lỗi sai và hỏi "Con cần giúp gì không?".`;
+            // Tạo Prompt chữa bài tự động cho AI
+            const promptPhanTich = taoPromptChuaBai(currentUser.hoTen, baiHocTitle, diemSo, danhSachCauHoi.length, chiTietLamBai);
+            
+            appendMessage("ai", `Thầy AI đang chấm bài và chuẩn bị nhận xét cho con chút nhé...`);
 
-            giaoTiepVoiAI(heThongBaoCao, true); 
+            try {
+                const aiResponse = await giaoTiepVoiAI(promptPhanTich);
+                // Xóa dòng chờ và thay bằng phản hồi AI
+                chatBox.lastElementChild.remove();
+                appendMessage("ai", aiResponse);
+            } catch (err) {
+                chatBox.lastElementChild.remove();
+                appendMessage("ai", "Đường truyền gián đoạn, con kiểm tra lại kết nối mạng rồi hỏi thầy nhé!");
+            }
         });
     }
 
-    const chatInput = document.getElementById('chat-input');
-    const sendChatBtn = document.getElementById('send-chat');
-
+    // 3. Xử lý Chat trò chuyện tiếp nối với AI
     if (sendChatBtn && chatInput) {
-        sendChatBtn.addEventListener('click', () => {
-            const text = chatInput.value.trim();
-            if (!text) return;
-            hienThiTinNhan(text, 'user-msg');
-            chatInput.value = '';
-            giaoTiepVoiAI(text, false);
+        sendChatBtn.addEventListener("click", guiTinNhanHocSinh);
+        chatInput.addEventListener("keypress", (e) => {
+            if (e.key === "Enter") guiTinNhanHocSinh();
         });
     }
 
-    async function giaoTiepVoiAI(noiDung, laBaoCaoNgam) {
-        conversationHistory.push({ "role": "user", "parts": [{ "text": noiDung }] });
-        
-        const loadingId = "loading-" + Date.now();
-        hienThiTinNhan("Thầy đang gõ phím...", 'ai-msg', loadingId);
+    async function guiTinNhanHocSinh() {
+        const msg = chatInput.value.trim();
+        if (!msg) return;
+
+        appendMessage("user", msg);
+        chatInput.value = "";
+
+        const loadingBubble = appendMessage("ai", "Thầy AI đang suy nghĩ...");
 
         try {
-            const payload = { history: conversationHistory };
-            if (laBaoCaoNgam) payload.context = noiDung;
-
-            const response = await fetch(GAS_WEBHOOK_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                body: JSON.stringify(payload)
-            });
-            
-            const data = await response.json();
-            
-            xoaPhanTu(loadingId);
-            const aiAnswer = data?.answer || "Thầy đã nhận được bài làm của con!";
-            hienThiTinNhan(aiAnswer, 'ai-msg');
-            conversationHistory.push({ "role": "model", "parts": [{ "text": aiAnswer }] });
-
-        } catch (error) {
-            console.error("Lỗi giao tiếp AI: ", error);
-            xoaPhanTu(loadingId);
-            hienThiTinNhan("Đường truyền đang gián đoạn, con đợi chút nhé!", 'ai-msg');
+            const promptChat = `Học sinh ${currentUser.hoTen} hỏi thêm: "${msg}". Hãy đóng vai gia sư tiểu học thân thiện, hướng dẫn gợi mở (ZPD) ngắn gọn cho học sinh.`;
+            const reply = await giaoTiepVoiAI(promptChat);
+            loadingBubble.innerText = reply;
+        } catch (err) {
+            loadingBubble.innerText = "Đường truyền gián đoạn, con đợi chút rồi gửi lại tin nhắn nhé!";
         }
     }
 
-    function hienThiTinNhan(text = '', typeClass = '', id = '') {
-        const box = document.getElementById('chat-box');
-        if (!box) return;
-        const safeText = String(text).replace(/\n/g, '<br>');
-        const idAttr = id ? `id="${id}"` : '';
-        box.insertAdjacentHTML('beforeend', `<div class="chat-bubble ${typeClass}" ${idAttr}>${safeText}</div>`);
-        box.scrollTop = box.scrollHeight;
+    function appendMessage(sender, text) {
+        if (!chatBox) return;
+        const msgDiv = document.createElement("div");
+        msgDiv.className = `chat-bubble ${sender === "user" ? "user-msg" : "ai-msg"}`;
+        msgDiv.innerText = text;
+        chatBox.appendChild(msgDiv);
+        chatBox.scrollTop = chatBox.scrollHeight;
+        return msgDiv;
     }
+}
 
-    function xoaPhanTu(id) {
-        const el = document.getElementById(id);
-        if (el) el.remove();
+// ==========================================
+// D. HÀM GIAO TIẾP GOOGLE APPS SCRIPT AI (ĐÃ FIX LỖI CORS)
+// ==========================================
+async function giaoTiepVoiAI(promptText) {
+    try {
+        // GIẢI PHÁP VÁ LỖI CORS: 
+        // Dùng Content-Type: 'text/plain;charset=utf-8' để né yêu cầu Preflight OPTIONS từ trình duyệt
+        const response = await fetch(GAS_URL, {
+            method: "POST",
+            headers: { 
+                "Content-Type": "text/plain;charset=utf-8" 
+            },
+            body: JSON.stringify({ prompt: promptText })
+        });
+
+        if (!response.ok) {
+            throw new Error(`Lỗi máy chủ HTTP: ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        if (data && data.reply) {
+            return data.reply;
+        } else if (data && data.error) {
+            return `Thầy AI thông báo: ${data.error}`;
+        } else {
+            return "Thầy AI đã tiếp nhận nhưng chưa thể đưa ra câu trả lời lúc này.";
+        }
+    } catch (error) {
+        console.error("Lỗi giao tiếp AI:", error);
+        throw error;
     }
+}
+
+// Hàm hỗ trợ tạo Prompt ZPD bài làm
+function taoPromptChuaBai(tenHocSinh, tenBai, diem, tongCau, chiTiet) {
+    let chiTietText = chiTiet.map((item, i) => 
+        `- Câu ${i+1}: "${item.cauHoi}" | Con chọn: ${item.dapAnHocSinh} | Đáp án đúng: ${item.dapAnDung} -> ${item.laDapAnDung ? "ĐÚNG" : "SAI"}`
+    ).join("\n");
+
+    return `Bạn là Thầy giáo AI thân thiện, dạy lớp 4.
+Học sinh: ${tenHocSinh}
+Bài làm: ${tenBai}
+Kết quả: ${diem}/${tongCau} câu đúng.
+
+Chi tiết bài làm:
+${chiTietText}
+
+YÊU CẦU PHẢN HỒI:
+1. Khen ngợi tinh thần học tập của con một cách chân thành.
+2. Nếu có câu sai, hãy chọn 1 câu sai điển hình để hướng dẫn gợi mở (Vùng phát triển gần - ZPD), KHÔNG cho ngay đáp án mà đặt câu hỏi gợi ý để con tự tư duy.
+3. Giữ giọng văn ngắn gọn (dưới 150 từ), ấm áp, dùng từ xưng hô "thầy" - "con".`;
 }
