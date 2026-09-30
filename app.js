@@ -197,11 +197,11 @@ function handleLogin() {
     const correctPin = studentObj ? (studentObj.pin || "1234") : null;
 
     if (inputPin && inputPin === correctPin) { 
-        document.getElementById('login-screen').style.display = 'none';
-        document.getElementById('main-screen').style.display = 'flex';
+        // 1. Lưu tên học sinh vào bộ nhớ để menu.html nhận diện
+        localStorage.setItem("edupulse_student", selectedStudent);
         
-        document.getElementById('display-name').textContent = selectedStudent;
-        document.getElementById('display-class').textContent = "Lớp " + selectedClass;
+        // 2. Chuyển hướng ngay lập tức sang trang Thời khóa biểu
+        window.location.href = "menu.html";
     } else {
         alert("❌ Mã PIN chưa đúng, con vui lòng kiểm tra lại nhé!");
         passwordInput.value = '';
