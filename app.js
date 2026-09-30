@@ -13,71 +13,132 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// 2. DIỆN MẸO CHỐNG LỖI CORS: ĐƯỜNG DẪN WEB APP GOOGLE APPS SCRIPT
-// Lưu ý: Thay URL bên dưới bằng URL Exec Web App mới nhất của thầy
+// 2. URL GOOGLE APPS SCRIPT AI (ĐÃ FIX LỖI CORS)
 const GAS_URL = "https://script.google.com/macros/s/AKfycbyUwwqytE1S6XjKjRlcuqHV6b1M3RgyqpF/exec";
 
-// 3. ĐIỀU HƯỚNG THEO TRANG (ROUTER)
+// 3. NHẬN DIỆN TRANG VÀ KHỞI TẠO THÔNG MINH
 document.addEventListener("DOMContentLoaded", () => {
-    if (document.getElementById("login-section")) initLoginController();
-    if (document.getElementById("menu-section")) initMenuController();
-    if (document.getElementById("quiz-section")) initQuizController();
+    const path = window.location.pathname;
+
+    // Trang Đăng nhập (index.html)
+    if (document.getElementById("login-section") || document.getElementById("lop-select") || path.endsWith("index.html") || path === "/") {
+        initLoginController();
+    }
+
+    // Trang Menu Trạm khám phá (menu.html)
+    if (document.getElementById("menu-section") || document.getElementById("welcome-name") || document.getElementById("ten-hoc-sinh") || path.endsWith("menu.html")) {
+        initMenuController();
+    }
+
+    // Trang Bài tập (bai_toan.html, bai_tieng_viet.html, bai_tieng_anh.html)
+    if (document.getElementById("quiz-section") || path.includes("bai_")) {
+        initQuizController();
+    }
 });
 
 // ==========================================
 // A. BỘ ĐIỀU KHIỂN ĐĂNG NHẬP (index.html)
 // ==========================================
 function initLoginController() {
-    const loginBtn = document.getElementById("login-btn");
-    const nameInput = document.getElementById("student-name");
+    const lopSelect = document.getElementById("lop-select");
+    const nameSelect = document.getElementById("student-name");
     const pinInput = document.getElementById("pin-code");
+    const loginBtn = document.getElementById("login-btn");
     const errorMsg = document.getElementById("error-msg");
 
-    if (!loginBtn) return;
-
-    loginBtn.addEventListener("click", async () => {
-        const hoTen = nameInput.value.trim();
-        const pin = pinInput.value.trim();
-
-        if (!hoTen || !pin) {
-            showError("Con hãy điền đầy đủ Họ tên và Mã PIN nhé!");
-            return;
-        }
-
-        loginBtn.disabled = true;
-        loginBtn.innerText = "Đang kiểm tra...";
-
-        try {
-            const q = query(collection(db, "hoc_sinh"), where("hoTen", "==", hoTen), where("pin", "==", pin));
-            const snap = await getDocs(q);
-
-            if (!snap.empty) {
-                const userDoc = snap.docs[0];
-                const userData = userDoc.data();
-                
-                // Lưu thông tin học sinh vào Session Browser
-                localStorage.setItem("currentUser", JSON.stringify({
-                    id: userDoc.id,
-                    hoTen: userData.hoTen,
-                    lop: userData.lop
-                }));
-
-                window.location.href = "menu.html";
-            } else {
-                showError("Mã PIN hoặc Họ tên chưa đúng, con kiểm tra lại nhé!");
+    // 1. Sự kiện chọn Lớp (4B1 hoặc 4B2) -> Tự động nạp danh sách học sinh lớp đó từ Firestore
+    if (lopSelect && nameSelect) {
+        lopSelect.addEventListener("change", async (e) => {
+            const selectedLop = e.target.value.trim();
+            
+            nameSelect.innerHTML = '<option value="">-- Đang tải danh sách... --</option>';
+            
+            if (!selectedLop) {
+                nameSelect.innerHTML = '<option value="">-- Chọn Lớp trước --</option>';
+                return;
             }
-        } catch (err) {
-            console.error("Lỗi đăng nhập:", err);
-            showError("Kết nối máy chủ thất bại, con thử lại sau giây lát!");
-        } finally {
-            loginBtn.disabled = false;
-            loginBtn.innerText = "Vào Lớp Học";
-        }
-    });
+
+            try {
+                // Truy vấn danh sách học sinh thuộc Lớp được chọn (4B1 hoặc 4B2)
+                const q = query(collection(db, "hoc_sinh"), where("lop", "==", selectedLop));
+                const snap = await getDocs(q);
+
+                nameSelect.innerHTML = '<option value="">-- Chọn Tên Học Sinh --</option>';
+                
+                if (snap.empty) {
+                    nameSelect.innerHTML = '<option value="">-- Chưa có dữ liệu học sinh lớp này --</option>';
+                    return;
+                }
+
+                snap.forEach((docSnap) => {
+                    const data = docSnap.data();
+                    const opt = document.createElement("option");
+                    opt.value = data.hoTen;
+                    opt.textContent = data.hoTen;
+                    nameSelect.appendChild(opt);
+                });
+            } catch (err) {
+                console.error("Lỗi nạp danh sách học sinh theo lớp:", err);
+                nameSelect.innerHTML = '<option value="">-- Lỗi tải danh sách --</option>';
+            }
+        });
+    }
+
+    // 2. Xử lý nút Đăng nhập
+    if (loginBtn) {
+        loginBtn.addEventListener("click", async () => {
+            const selectedLop = lopSelect ? lopSelect.value.trim() : "";
+            const hoTen = nameSelect ? nameSelect.value.trim() : "";
+            const pin = pinInput ? pinInput.value.trim() : "";
+
+            if (!selectedLop || !hoTen || !pin) {
+                showError("Con hãy chọn Lớp, chọn Tên và nhập Mã PIN nhé!");
+                return;
+            }
+
+            loginBtn.disabled = true;
+            loginBtn.innerText = "Đang kiểm tra...";
+
+            try {
+                // Xác thực Học sinh theo Lớp, Họ tên và Mã PIN
+                const q = query(
+                    collection(db, "hoc_sinh"), 
+                    where("lop", "==", selectedLop),
+                    where("hoTen", "==", hoTen), 
+                    where("pin", "==", pin)
+                );
+                const snap = await getDocs(q);
+
+                if (!snap.empty) {
+                    const userDoc = snap.docs[0];
+                    const userData = userDoc.data();
+                    
+                    // Lưu thông tin học sinh vào localStorage
+                    localStorage.setItem("currentUser", JSON.stringify({
+                        id: userDoc.id,
+                        hoTen: userData.hoTen,
+                        lop: userData.lop
+                    }));
+
+                    window.location.href = "menu.html";
+                } else {
+                    showError("Mã PIN chưa đúng, con kiểm tra lại nhé!");
+                }
+            } catch (err) {
+                console.error("Lỗi đăng nhập:", err);
+                showError("Kết nối máy chủ thất bại, con thử lại sau giây lát!");
+            } finally {
+                loginBtn.disabled = false;
+                loginBtn.innerText = "Vào Lớp Học";
+            }
+        });
+    }
 
     function showError(msg) {
-        errorMsg.innerText = msg;
-        errorMsg.style.display = "block";
+        if (errorMsg) {
+            errorMsg.innerText = msg;
+            errorMsg.style.display = "block";
+        }
     }
 }
 
@@ -92,11 +153,16 @@ async function initMenuController() {
     }
 
     const currentUser = JSON.parse(currentUserStr);
-    const welcomeName = document.getElementById("welcome-name");
+
+    // Hiển thị tên học sinh và lớp
+    const welcomeIDs = ["welcome-name", "ten-hoc-sinh", "student-display", "user-name"];
+    welcomeIDs.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.innerText = `${currentUser.hoTen} (${currentUser.lop})`;
+    });
+
     const loadingMsg = document.getElementById("loading-msg");
     const logoutBtn = document.getElementById("logout-btn");
-
-    if (welcomeName) welcomeName.innerText = currentUser.hoTen;
 
     // Xử lý Đăng xuất
     if (logoutBtn) {
@@ -117,7 +183,6 @@ async function initMenuController() {
             setCardVisibility("card-tieng-viet", config.tiengViet ?? true);
             setCardVisibility("card-tieng-anh", config.tiengAnh ?? true);
         } else {
-            // Mặc định hiện tất cả nếu chưa có cấu hình
             setCardVisibility("card-toan", true);
             setCardVisibility("card-tieng-viet", true);
             setCardVisibility("card-tieng-anh", true);
@@ -160,7 +225,6 @@ async function initQuizController() {
     let danhSachCauHoi = [];
     let baiHocTitle = "";
 
-    // 1. Tải ngân hàng đề thi
     try {
         const snap = await getDoc(doc(db, "ngan_hang_de", monHoc));
         if (snap.exists()) {
@@ -179,7 +243,6 @@ async function initQuizController() {
         if (danhSachCauHoiEl) danhSachCauHoiEl.innerHTML = `<p style="text-align:center; color:#ff6b6b;">Không thể tải dữ liệu đề thi.</p>`;
     }
 
-    // Render danh sách câu hỏi
     function renderQuiz(questions) {
         if (!danhSachCauHoiEl) return;
         danhSachCauHoiEl.innerHTML = "";
@@ -190,7 +253,7 @@ async function initQuizController() {
             
             let htmlOptions = "";
             q.cacLuaChon.forEach((opt) => {
-                const optKey = opt.trim().substring(0, 1); // Lấy chữ cái A, B, C, D
+                const optKey = opt.trim().substring(0, 1);
                 htmlOptions += `
                     <label>
                         <input type="radio" name="cau_${q.id}" value="${optKey}">
@@ -207,7 +270,6 @@ async function initQuizController() {
         });
     }
 
-    // 2. Xử lý Nộp bài & Đánh giá ZPD
     if (submitBtn) {
         submitBtn.addEventListener("click", async () => {
             let diemSo = 0;
@@ -228,15 +290,12 @@ async function initQuizController() {
                 });
             });
 
-            // Vô hiệu hóa nút sau khi nộp
             submitBtn.disabled = true;
             submitBtn.innerText = "Đã Nộp Bài";
 
-            // Khóa lựa chọn trắc nghiệm
             const allRadios = document.querySelectorAll('input[type="radio"]');
             allRadios.forEach(r => r.disabled = true);
 
-            // Lưu kết quả vào Firestore
             try {
                 await addDoc(collection(db, "ket_qua_hoc_tap"), {
                     hocSinh: currentUser.hoTen,
@@ -251,27 +310,23 @@ async function initQuizController() {
                 console.error("Lỗi lưu kết quả:", e);
             }
 
-            // Hiện khung Chatbot Gia sư AI ZPD
             if (chatSection) chatSection.style.display = "flex";
 
-            // Tạo Prompt chữa bài tự động cho AI
-            const promptPhanTich = taoPromptChuaBai(currentUser.hoTen, baiHocTitle, diemSo, danhSachCauHoi.length, chiTietLamBai);
+            const promptPhanTich = taoPromptChuaBai(currentUser.hoTen, currentUser.lop, baiHocTitle, diemSo, danhSachCauHoi.length, chiTietLamBai);
             
             appendMessage("ai", `Thầy AI đang chấm bài và chuẩn bị nhận xét cho con chút nhé...`);
 
             try {
                 const aiResponse = await giaoTiepVoiAI(promptPhanTich);
-                // Xóa dòng chờ và thay bằng phản hồi AI
-                chatBox.lastElementChild.remove();
+                if (chatBox.lastElementChild) chatBox.lastElementChild.remove();
                 appendMessage("ai", aiResponse);
             } catch (err) {
-                chatBox.lastElementChild.remove();
+                if (chatBox.lastElementChild) chatBox.lastElementChild.remove();
                 appendMessage("ai", "Đường truyền gián đoạn, con kiểm tra lại kết nối mạng rồi hỏi thầy nhé!");
             }
         });
     }
 
-    // 3. Xử lý Chat trò chuyện tiếp nối với AI
     if (sendChatBtn && chatInput) {
         sendChatBtn.addEventListener("click", guiTinNhanHocSinh);
         chatInput.addEventListener("keypress", (e) => {
@@ -289,7 +344,7 @@ async function initQuizController() {
         const loadingBubble = appendMessage("ai", "Thầy AI đang suy nghĩ...");
 
         try {
-            const promptChat = `Học sinh ${currentUser.hoTen} hỏi thêm: "${msg}". Hãy đóng vai gia sư tiểu học thân thiện, hướng dẫn gợi mở (ZPD) ngắn gọn cho học sinh.`;
+            const promptChat = `Học sinh ${currentUser.hoTen} (${currentUser.lop}) hỏi thêm: "${msg}". Hãy đóng vai gia sư tiểu học thân thiện, hướng dẫn gợi mở (ZPD) ngắn gọn cho học sinh.`;
             const reply = await giaoTiepVoiAI(promptChat);
             loadingBubble.innerText = reply;
         } catch (err) {
@@ -309,12 +364,10 @@ async function initQuizController() {
 }
 
 // ==========================================
-// D. HÀM GIAO TIẾP GOOGLE APPS SCRIPT AI (ĐÃ FIX LỖI CORS)
+// D. HÀM GIAO TIẾP GOOGLE APPS SCRIPT AI (CHỐNG LỖI CORS)
 // ==========================================
 async function giaoTiepVoiAI(promptText) {
     try {
-        // GIẢI PHÁP VÁ LỖI CORS: 
-        // Dùng Content-Type: 'text/plain;charset=utf-8' để né yêu cầu Preflight OPTIONS từ trình duyệt
         const response = await fetch(GAS_URL, {
             method: "POST",
             headers: { 
@@ -329,8 +382,8 @@ async function giaoTiepVoiAI(promptText) {
 
         const data = await response.json();
         
-        if (data && data.reply) {
-            return data.reply;
+        if (data && (data.reply || data.answer)) {
+            return data.reply || data.answer;
         } else if (data && data.error) {
             return `Thầy AI thông báo: ${data.error}`;
         } else {
@@ -342,14 +395,13 @@ async function giaoTiepVoiAI(promptText) {
     }
 }
 
-// Hàm hỗ trợ tạo Prompt ZPD bài làm
-function taoPromptChuaBai(tenHocSinh, tenBai, diem, tongCau, chiTiet) {
+function taoPromptChuaBai(tenHocSinh, lop, tenBai, diem, tongCau, chiTiet) {
     let chiTietText = chiTiet.map((item, i) => 
         `- Câu ${i+1}: "${item.cauHoi}" | Con chọn: ${item.dapAnHocSinh} | Đáp án đúng: ${item.dapAnDung} -> ${item.laDapAnDung ? "ĐÚNG" : "SAI"}`
     ).join("\n");
 
-    return `Bạn là Thầy giáo AI thân thiện, dạy lớp 4.
-Học sinh: ${tenHocSinh}
+    return `Bạn là Thầy giáo AI thân thiện, dạy khối lớp 4.
+Học sinh: ${tenHocSinh} - Lớp ${lop}
 Bài làm: ${tenBai}
 Kết quả: ${diem}/${tongCau} câu đúng.
 
