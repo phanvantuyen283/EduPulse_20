@@ -1,11 +1,11 @@
 // ==========================================
-// EDUPULSE 20 - LOGIC XỬ LÝ GIAO DIỆN & AI (ZPD TINH GỌN)
+// EDUPULSE 20 - LOGIC XỬ LÝ GIAO DIỆN & AI (ĐÃ ĐIỀU CHỈNH CHUẨN)
 // ==========================================
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
 import { getFirestore, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 
-// 1. Cấu hình Firebase từ dự án của thầy
+// 1. Cấu hình Firebase từ dự án EduPulse 20
 const firebaseConfig = {
   apiKey: "AIzaSyDgPsOLRCLmzQAbC2eI0QX8gXLF7FicIzk",
   authDomain: "edupulse-20.firebaseapp.com",
@@ -120,6 +120,7 @@ classSelect.addEventListener('change', async function() {
     studentSelect.innerHTML = '<option value="" disabled selected>Đang tải danh sách...</option>';
     studentSelect.disabled = true;
     passwordInput.disabled = true;
+    passwordInput.value = '';
     loginBtn.disabled = true;
 
     let danhSachHienThi = [];
@@ -132,7 +133,7 @@ classSelect.addEventListener('change', async function() {
             danhSachHienThi.push(doc.data());
         });
 
-        // Nếu Firebase chưa có, lấy từ danh sách dự phòng
+        // Nếu Firebase chưa có dữ liệu, lấy từ danh sách dự phòng
         if (danhSachHienThi.length === 0) {
             danhSachHienThi = danhSachDuPhong.filter(item => item.lop === selectedClass);
         }
@@ -141,14 +142,15 @@ classSelect.addEventListener('change', async function() {
         danhSachHienThi = danhSachDuPhong.filter(item => item.lop === selectedClass);
     }
 
-    // Sắp xếp tên theo thứ tự A-Z
-    danhSachHienThi.sort((a, b) => a.hoTen.localeCompare(b.hoTen));
+    // Sắp xếp tên theo thứ tự A-Z tiếng Việt
+    danhSachHienThi.sort((a, b) => a.hoTen.localeCompare(b.hoTen, 'vi'));
 
     studentSelect.innerHTML = '<option value="" disabled selected>-- Bấm để chọn tên của con --</option>';
     danhSachHienThi.forEach(hs => {
         const opt = document.createElement('option');
         opt.value = hs.hoTen;
         opt.textContent = hs.hoTen;
+        opt.dataset.pin = hs.pin || "1234"; // Lưu mã PIN vào dataset để kiểm tra
         studentSelect.appendChild(opt);
     });
 
@@ -159,35 +161,50 @@ classSelect.addEventListener('change', async function() {
 studentSelect.addEventListener('change', function() {
     if(this.value) {
         passwordInput.disabled = false;
+        passwordInput.value = '';
         passwordInput.focus();
+        loginBtn.disabled = true;
     }
 });
 
 // Khi nhập PIN -> Kích hoạt nút đăng nhập
 passwordInput.addEventListener('input', function() {
-    if(this.value.length >= 4) {
+    if(this.value.trim().length >= 4) {
         loginBtn.disabled = false;
     } else {
         loginBtn.disabled = true;
     }
 });
 
-// Sự kiện Đăng nhập vào lớp học
-loginBtn.addEventListener('click', function() {
+// Sự kiện Đăng nhập vào lớp học (Đã sửa lỗi kiểm tra mã PIN)
+loginBtn.addEventListener('click', handleLogin);
+passwordInput.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter' && !loginBtn.disabled) {
+        handleLogin();
+    }
+});
+
+function handleLogin() {
     const selectedClass = classSelect.value;
     const selectedStudent = studentSelect.value;
-    const pin = passwordInput.value;
+    const inputPin = passwordInput.value.trim();
 
-    if(pin.length >= 4) { 
+    // Lấy mã PIN chuẩn từ option được chọn
+    const selectedOption = studentSelect.options[studentSelect.selectedIndex];
+    const correctPin = selectedOption ? selectedOption.dataset.pin : null;
+
+    if (inputPin === correctPin) { 
         document.getElementById('login-screen').style.display = 'none';
-        document.getElementById('main-screen').style.display = 'block';
+        document.getElementById('main-screen').style.display = 'flex'; // Dùng 'flex' để giữ layout chuẩn CSS
         
         document.getElementById('display-name').textContent = selectedStudent;
         document.getElementById('display-class').textContent = "Lớp " + selectedClass;
     } else {
-        alert("Mã PIN chưa đúng, con vui lòng kiểm tra lại nhé!");
+        alert("❌ Mã PIN chưa đúng, con vui lòng kiểm tra lại nhé!");
+        passwordInput.value = '';
+        loginBtn.disabled = true;
     }
-});
+}
 
 // Đăng xuất quay lại màn hình đầu
 document.getElementById('logout-btn').addEventListener('click', function() {
@@ -197,7 +214,6 @@ document.getElementById('logout-btn').addEventListener('click', function() {
 // ==========================================
 // 4. KẾT NỐI TRỢ LÝ AI (TRỰC TIẾP, GỌN NHẸ)
 // ==========================================
-// THẦY HÃY DÁN ĐƯỜNG LINK WEBHOOK GOOGLE APPS SCRIPT CỦA THẦY VÀO DƯỚI ĐÂY:
 const GAS_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbw959M8qHfxv61A59_7RuV2QwaVg3GHzIYsJfDUGnUm01D8NloE34gOyjaUbQChGisT/exec";
 
 async function guiCauHoiChoAI() {
@@ -212,7 +228,6 @@ async function guiCauHoiChoAI() {
     const loadingId = appendMessage("Thầy đang suy nghĩ gợi ý cho con...", 'ai-message loading');
 
     try {
-        // Gửi trực tiếp câu hỏi đơn thuần lên Webhook
         const response = await fetch(GAS_WEBHOOK_URL, {
             method: 'POST',
             mode: 'cors',
@@ -227,6 +242,7 @@ async function guiCauHoiChoAI() {
         appendMessage(data.answer, 'ai-message');
 
     } catch (error) {
+        console.error("Lỗi gửi tới AI:", error);
         removeMessage(loadingId);
         appendMessage("Mạng đang hơi chậm, con gửi lại câu hỏi giúp thầy nhé!", 'ai-message');
     }
@@ -240,15 +256,19 @@ userInput.addEventListener('keypress', function(e) {
     }
 });
 
-// Hàm hỗ trợ hiển thị khung chat
+// Hàm hỗ trợ hiển thị khung chat (Xử lý cả xuống dòng \n từ Gemini)
 function appendMessage(text, className) {
     const msgDiv = document.createElement('div');
     msgDiv.className = `message ${className}`;
     
     let avatar = className.includes('user') ? '👤' : '🤖';
+    
+    // Đổi ký tự \n thành thẻ <br> để câu trả lời xuống dòng đẹp mắt
+    const formattedText = escapeHtml(text).replace(/\n/g, '<br>');
+
     msgDiv.innerHTML = `
         <div class="avatar">${avatar}</div>
-        <div class="text">${escapeHtml(text)}</div>
+        <div class="text">${formattedText}</div>
     `;
     chatBox.appendChild(msgDiv);
     chatBox.scrollTop = chatBox.scrollHeight;
