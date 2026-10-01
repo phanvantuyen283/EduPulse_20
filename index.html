@@ -15,8 +15,9 @@
         
         <!-- Chọn Lớp -->
         <div class="input-group">
-            <label for="student-class">Lớp của con</label>
+            <label for="lop-select">Lớp của con</label>
             <select id="lop-select" class="input-control">
+                <option value="">-- Chọn Lớp --</option>
                 <option value="4B1">Lớp 4B1</option>
                 <option value="4B2">Lớp 4B2</option>
             </select>
@@ -32,12 +33,12 @@
 
         <!-- Nhập Mã PIN (Bàn phím số) -->
         <div class="input-group">
-            <label for="student-pin">Mã PIN bí mật</label>
+            <label for="pin-code">Mã PIN bí mật</label>
             <input type="password" id="pin-code" class="input-control" placeholder="Nhập 4 số PIN (Mặc định: 1234)" inputmode="numeric" pattern="[0-9]*" maxlength="4">
         </div>
 
         <button id="login-btn" class="primary-btn">Vào Lớp Học</button>
-        <p id="error-message" class="error-msg">Sai mã PIN hoặc con chưa chọn Tên nhé!</p>
+        <p id="error-message" class="error-msg" style="display: none;"></p>
     </div>
 
     <!-- Gọi file xử lý logic ES Module -->
