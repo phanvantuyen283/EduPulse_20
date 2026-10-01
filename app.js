@@ -11,6 +11,7 @@ import {
     getDocs
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+// 1. Cấu hình Firebase Project
 const firebaseConfig = {
     apiKey: "AIzaSyDgPsOLRCLmzQAbC2eI0QX8gXLF7FicIzk",
     authDomain: "edupulse-20.firebaseapp.com",
@@ -21,7 +22,7 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 window.db = db;
 
-// Quản lý thông báo lỗi
+// --- HÀM TIỆN ÍCH CHUNG ---
 function showError(msg) {
     const errorMsg = document.getElementById("error-message") || document.getElementById("error-msg");
     if (errorMsg) {
@@ -40,19 +41,24 @@ function clearError() {
     }
 }
 
+function getCurrentUser() {
+    const userStr = localStorage.getItem("currentUser");
+    return userStr ? JSON.parse(userStr) : null;
+}
+
+// ============================================================
+// 2. XỬ LÝ CHO TRANG ĐĂNG NHẬP (index.html)
+// ============================================================
 function initLoginController() {
-    // Khớp 100% ID với file index.html
     const lopSelect = document.getElementById("lop-select");
     const nameSelect = document.getElementById("student-name");
     const pinInput = document.getElementById("pin-code");
     const loginBtn = document.getElementById("login-btn");
 
-    if (!lopSelect || !nameSelect) {
-        console.error("LỖI: Không tìm thấy các thẻ select trong index.html!");
-        return;
-    }
+    // Nếu không phải trang index.html thì bỏ qua
+    if (!lopSelect || !nameSelect || !loginBtn) return;
 
-    // Hàm nạp danh sách học sinh từ Firestore
+    // Hàm nạp danh sách học sinh theo lớp từ Firestore
     async function loadStudents(selectedLop) {
         clearError();
         nameSelect.innerHTML = '<option value="">-- Đang tải danh sách... --</option>';
@@ -82,7 +88,7 @@ function initLoginController() {
                 });
             });
 
-            // Sắp xếp tên theo bảng chữ cái Tiếng Việt
+            // Sắp xếp theo tên Tiếng Việt
             studentsList.sort((a, b) => a.hoTen.localeCompare(b.hoTen, "vi"));
 
             studentsList.forEach((st) => {
@@ -98,69 +104,108 @@ function initLoginController() {
         }
     }
 
-    // Tự động tải nếu lớp đã chọn sẵn
+    // Tự động tải nếu đã chọn lớp từ trước
     if (lopSelect.value) {
         loadStudents(lopSelect.value.trim());
     }
 
-    // Lắng nghe khi thay đổi lớp
+    // Sự kiện chọn lớp
     lopSelect.addEventListener("change", (e) => {
         loadStudents(e.target.value.trim());
     });
 
     // Sự kiện Đăng Nhập
-    if (loginBtn) {
-        loginBtn.addEventListener("click", async (e) => {
-            if (e) e.preventDefault();
-            clearError();
+    loginBtn.addEventListener("click", async (e) => {
+        if (e) e.preventDefault();
+        clearError();
 
-            const selectedLop = lopSelect.value.trim();
-            const hoTen = nameSelect.value.trim();
-            const pin = pinInput ? pinInput.value.trim() : "";
+        const selectedLop = lopSelect.value.trim();
+        const hoTen = nameSelect.value.trim();
+        const pin = pinInput ? pinInput.value.trim() : "";
 
-            if (!selectedLop) return showError("Con hãy chọn Lớp học nhé!");
-            if (!hoTen) return showError("Con hãy chọn Tên của mình nhé!");
-            if (!pin) return showError("Con hãy nhập Mã PIN nhé!");
+        if (!selectedLop) return showError("Con hãy chọn Lớp học nhé!");
+        if (!hoTen) return showError("Con hãy chọn Tên của mình nhé!");
+        if (!pin) return showError("Con hãy nhập Mã PIN nhé!");
 
-            loginBtn.disabled = true;
-            loginBtn.innerText = "Đang kiểm tra...";
+        loginBtn.disabled = true;
+        loginBtn.innerText = "Đang kiểm tra...";
 
-            try {
-                const q = query(
-                    collection(db, "hoc_sinh"),
-                    where("lop", "==", selectedLop),
-                    where("hoTen", "==", hoTen),
-                    where("pin", "==", pin)
-                );
-                const snap = await getDocs(q);
+        try {
+            const q = query(
+                collection(db, "hoc_sinh"),
+                where("lop", "==", selectedLop),
+                where("hoTen", "==", hoTen),
+                where("pin", "==", pin)
+            );
+            const snap = await getDocs(q);
 
-                if (!snap.empty) {
-                    const userDoc = snap.docs[0];
-                    const userData = userDoc.data();
+            if (!snap.empty) {
+                const userDoc = snap.docs[0];
+                const userData = userDoc.data();
 
-                    localStorage.setItem("currentUser", JSON.stringify({
-                        id: userDoc.id,
-                        hoTen: userData.hoTen,
-                        lop: userData.lop
-                    }));
+                localStorage.setItem("currentUser", JSON.stringify({
+                    id: userDoc.id,
+                    hoTen: userData.hoTen,
+                    lop: userData.lop
+                }));
 
-                    window.location.href = "menu.html";
-                } else {
-                    showError("Mã PIN chưa đúng, con kiểm tra lại nhé!");
-                }
-            } catch (err) {
-                console.error("Lỗi đăng nhập:", err);
-                showError("Lỗi đăng nhập: " + err.message);
-            } finally {
-                loginBtn.disabled = false;
-                loginBtn.innerText = "Vào Lớp Học";
+                // Chuyển sang trang menu
+                window.location.href = "menu.html";
+            } else {
+                showError("Mã PIN chưa đúng, con kiểm tra lại nhé!");
             }
+        } catch (err) {
+            console.error("Lỗi đăng nhập:", err);
+            showError("Lỗi đăng nhập: " + err.message);
+        } finally {
+            loginBtn.disabled = false;
+            loginBtn.innerText = "Vào Lớp Học";
+        }
+    });
+}
+
+// ============================================================
+// 3. XỬ LÝ CHO TRANG MENU KHÁM PHÁ (menu.html)
+// ============================================================
+function initMenuController() {
+    const welcomeName = document.getElementById("welcome-name");
+    const loadingMsg = document.getElementById("loading-msg");
+    const logoutBtn = document.getElementById("logout-btn");
+
+    // Nếu không có thẻ welcome-name (không ở trang menu.html) thì dừng lại
+    if (!welcomeName) return;
+
+    const currentUser = getCurrentUser();
+
+    // Bảo vệ trang: Nếu chưa đăng nhập thì đẩy về index.html
+    if (!currentUser) {
+        window.location.href = "index.html";
+        return;
+    }
+
+    // 1. Hiển thị tên học sinh lên header
+    welcomeName.innerText = currentUser.hoTen;
+
+    // 2. Ẩn dòng chữ thông báo đồng bộ bài học
+    if (loadingMsg) {
+        loadingMsg.style.display = "none";
+    }
+
+    // 3. Gắn sự kiện nút Đăng xuất
+    if (logoutBtn) {
+        logoutBtn.addEventListener("click", () => {
+            localStorage.removeItem("currentUser");
+            window.location.href = "index.html";
         });
     }
 }
 
+// ============================================================
+// KHỞI CHẠY TOÀN BỘ HỆ THỐNG
+// ============================================================
 function initApp() {
     initLoginController();
+    initMenuController();
 }
 
 if (document.readyState === "loading") {
