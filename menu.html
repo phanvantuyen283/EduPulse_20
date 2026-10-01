@@ -15,47 +15,43 @@
                 Chào mừng con, <span id="welcome-name" style="color: #d4af37; font-weight: 800;">Học sinh</span>! 
                 (<span id="welcome-class" style="color: #48bb78; font-weight: 700;">--</span>)
             </p>
-            <p style="color: #a0aec0; font-size: 0.95rem;">Hôm nay con muốn chinh phục bài học nào?</p>
+            <p style="color: #a0aec0; font-size: 0.95rem;">Hôm nay con muốn chinh phục môn học nào?</p>
         </header>
 
-        <!-- Thẻ chọn môn học -->
+        <!-- Thẻ chọn môn học - ID khớp chính xác với Firebase Document ID -->
         <div class="subject-grid">
-            <div class="subject-card" data-subject="Toán">
+            <div class="subject-card" data-subject-id="toan" data-subject-name="Toán Học">
                 <div class="card-icon">📐</div>
                 <h3>Toán Học</h3>
                 <p>Tư duy & Con số</p>
             </div>
 
-            <div class="subject-card" data-subject="Tiếng Việt">
+            <div class="subject-card" data-subject-id="tieng_viet" data-subject-name="Tiếng Việt">
                 <div class="card-icon">📖</div>
                 <h3>Tiếng Việt</h3>
                 <p>Vẻ đẹp ngôn từ</p>
             </div>
 
-            <div class="subject-card" data-subject="Tiếng Anh">
+            <div class="subject-card" data-subject-id="tieng_Anh" data-subject-name="Tiếng Anh">
                 <div class="card-icon">🌍</div>
                 <h3>Tiếng Anh</h3>
                 <p>Cửa sổ thế giới</p>
             </div>
         </div>
 
-        <!-- Khu vực hiển thị danh sách bài học -->
+        <!-- Khu vực hiển thị danh sách bài học/đề thi -->
         <div id="lessons-section" style="margin-top: 30px; display: none;">
             <h2 id="selected-subject-title" style="color: #2b6cb0; font-size: 1.3rem; margin-bottom: 15px; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px;">
-                Danh sách bài học
+                Danh sách đề thi
             </h2>
 
-            <!-- Thông báo trạng thái -->
-            <p id="loading-msg" class="loading-msg" style="display: none;">Đang tải danh sách bài học...</p>
-
-            <!-- Khung chứa các bài học -->
+            <p id="loading-msg" class="loading-msg" style="display: none;">Đang tải dữ liệu bài học...</p>
             <div id="lessons-list" class="lessons-grid" style="display: grid; gap: 12px;"></div>
         </div>
 
         <button id="logout-btn" class="secondary-btn" style="margin-top: 30px;">🚪 Tạm biệt lớp học</button>
     </div>
 
-    <!-- Gọi file xử lý ES Module -->
     <script type="module" src="app.js"></script>
 
 </body>
