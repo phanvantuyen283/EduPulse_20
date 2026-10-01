@@ -9,42 +9,53 @@
 <body>
 
     <div class="main-container menu-container" id="menu-section">
-        <header style="text-align: center; margin-bottom: 30px;">
+        <header style="text-align: center; margin-bottom: 25px;">
             <h1 class="app-title">Trạm Khám Phá</h1>
-            <p class="app-subtitle" style="font-size: 1.1rem; margin-bottom: 10px;">
-                Chào mừng con, <span id="welcome-name" style="color: #d4af37; font-weight: 800;">Học sinh</span>!
+            <p class="app-subtitle" style="font-size: 1.1rem; margin-bottom: 5px;">
+                Chào mừng con, <span id="welcome-name" style="color: #d4af37; font-weight: 800;">Học sinh</span>! 
+                (<span id="welcome-class" style="color: #48bb78; font-weight: 700;">--</span>)
             </p>
-            <p style="color: #a0aec0;">Hôm nay con muốn chinh phục đỉnh cao nào?</p>
+            <p style="color: #a0aec0; font-size: 0.95rem;">Hôm nay con muốn chinh phục bài học nào?</p>
         </header>
 
-        <!-- Thông báo chờ tải dữ liệu -->
-        <p id="loading-msg" class="loading-msg">Đang đồng bộ bài học từ máy chủ của thầy Tuyến...</p>
-
-        <!-- Danh sách môn học -->
+        <!-- Thẻ chọn môn học -->
         <div class="subject-grid">
-            <div class="subject-card" id="card-toan" onclick="window.location.href='bai_toan.html'">
+            <div class="subject-card" data-subject="Toán">
                 <div class="card-icon">📐</div>
                 <h3>Toán Học</h3>
                 <p>Tư duy & Con số</p>
             </div>
 
-            <div class="subject-card" id="card-tieng-viet" onclick="window.location.href='bai_tieng_viet.html'">
+            <div class="subject-card" data-subject="Tiếng Việt">
                 <div class="card-icon">📖</div>
                 <h3>Tiếng Việt</h3>
                 <p>Vẻ đẹp ngôn từ</p>
             </div>
 
-            <div class="subject-card" id="card-tieng-anh" onclick="window.location.href='bai_tieng_anh.html'">
+            <div class="subject-card" data-subject="Tiếng Anh">
                 <div class="card-icon">🌍</div>
                 <h3>Tiếng Anh</h3>
                 <p>Cửa sổ thế giới</p>
             </div>
         </div>
 
-        <button id="logout-btn" class="secondary-btn">🚪 Tạm biệt lớp học</button>
+        <!-- Khu vực hiển thị danh sách bài học -->
+        <div id="lessons-section" style="margin-top: 30px; display: none;">
+            <h2 id="selected-subject-title" style="color: #2b6cb0; font-size: 1.3rem; margin-bottom: 15px; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px;">
+                Danh sách bài học
+            </h2>
+
+            <!-- Thông báo trạng thái -->
+            <p id="loading-msg" class="loading-msg" style="display: none;">Đang tải danh sách bài học...</p>
+
+            <!-- Khung chứa các bài học -->
+            <div id="lessons-list" class="lessons-grid" style="display: grid; gap: 12px;"></div>
+        </div>
+
+        <button id="logout-btn" class="secondary-btn" style="margin-top: 30px;">🚪 Tạm biệt lớp học</button>
     </div>
 
-    <!-- Gọi não bộ xử lý -->
+    <!-- Gọi file xử lý ES Module -->
     <script type="module" src="app.js"></script>
 
 </body>
