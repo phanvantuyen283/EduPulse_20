@@ -21,8 +21,9 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 window.db = db;
 
+// Quản lý thông báo lỗi
 function showError(msg) {
-    const errorMsg = document.getElementById("error-msg");
+    const errorMsg = document.getElementById("error-message") || document.getElementById("error-msg");
     if (errorMsg) {
         errorMsg.innerText = msg;
         errorMsg.style.display = "block";
@@ -32,7 +33,7 @@ function showError(msg) {
 }
 
 function clearError() {
-    const errorMsg = document.getElementById("error-msg");
+    const errorMsg = document.getElementById("error-message") || document.getElementById("error-msg");
     if (errorMsg) {
         errorMsg.innerText = "";
         errorMsg.style.display = "none";
@@ -40,21 +41,20 @@ function clearError() {
 }
 
 function initLoginController() {
-    // Khớp ID theo đúng hình ảnh index.html của thầy
-    const lopSelect = document.getElementById("student-class");
+    // Khớp 100% ID với file index.html
+    const lopSelect = document.getElementById("lop-select");
     const nameSelect = document.getElementById("student-name");
-    const pinInput = document.getElementById("student-pin");
-    const loginBtn = document.getElementById("login-btn") || document.querySelector("button[type='submit']") || document.querySelector("button");
+    const pinInput = document.getElementById("pin-code");
+    const loginBtn = document.getElementById("login-btn");
 
     if (!lopSelect || !nameSelect) {
-        console.error("Không tìm thấy các thẻ select trong index.html!");
+        console.error("LỖI: Không tìm thấy các thẻ select trong index.html!");
         return;
     }
 
-    // Sự kiện khi chọn Lớp
-    lopSelect.addEventListener("change", async (e) => {
+    // Hàm nạp danh sách học sinh từ Firestore
+    async function loadStudents(selectedLop) {
         clearError();
-        const selectedLop = e.target.value.trim();
         nameSelect.innerHTML = '<option value="">-- Đang tải danh sách... --</option>';
 
         if (!selectedLop) {
@@ -82,7 +82,7 @@ function initLoginController() {
                 });
             });
 
-            // Sắp xếp tên theo thứ tự bảng chữ cái Tiếng Việt
+            // Sắp xếp tên theo bảng chữ cái Tiếng Việt
             studentsList.sort((a, b) => a.hoTen.localeCompare(b.hoTen, "vi"));
 
             studentsList.forEach((st) => {
@@ -96,9 +96,19 @@ function initLoginController() {
             nameSelect.innerHTML = '<option value="">-- Lỗi kết nối Firestore --</option>';
             showError("Không thể nạp danh sách học sinh: " + err.message);
         }
+    }
+
+    // Tự động tải nếu lớp đã chọn sẵn
+    if (lopSelect.value) {
+        loadStudents(lopSelect.value.trim());
+    }
+
+    // Lắng nghe khi thay đổi lớp
+    lopSelect.addEventListener("change", (e) => {
+        loadStudents(e.target.value.trim());
     });
 
-    // Sự kiện khi bấm nút Đăng Nhập
+    // Sự kiện Đăng Nhập
     if (loginBtn) {
         loginBtn.addEventListener("click", async (e) => {
             if (e) e.preventDefault();
