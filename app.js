@@ -6,12 +6,13 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import {
     getFirestore,
     collection,
+    doc,
+    getDoc,
     query,
     where,
     getDocs
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// 1. Cấu hình Firebase Project
 const firebaseConfig = {
     apiKey: "AIzaSyDgPsOLRCLmzQAbC2eI0QX8gXLF7FicIzk",
     authDomain: "edupulse-20.firebaseapp.com",
@@ -22,7 +23,6 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 window.db = db;
 
-// --- HÀM TIỆN ÍCH CHUNG ---
 function showError(msg) {
     const errorMsg = document.getElementById("error-message") || document.getElementById("error-msg");
     if (errorMsg) {
@@ -47,7 +47,7 @@ function getCurrentUser() {
 }
 
 // ============================================================
-// 2. XỬ LÝ CHO TRANG ĐĂNG NHẬP (index.html)
+// 1. XỬ LÝ TRANG ĐĂNG NHẬP (index.html)
 // ============================================================
 function initLoginController() {
     const lopSelect = document.getElementById("lop-select");
@@ -55,10 +55,8 @@ function initLoginController() {
     const pinInput = document.getElementById("pin-code");
     const loginBtn = document.getElementById("login-btn");
 
-    // Nếu không phải trang index.html thì bỏ qua
     if (!lopSelect || !nameSelect || !loginBtn) return;
 
-    // Hàm nạp danh sách học sinh theo lớp từ Firestore
     async function loadStudents(selectedLop) {
         clearError();
         nameSelect.innerHTML = '<option value="">-- Đang tải danh sách... --</option>';
@@ -88,7 +86,6 @@ function initLoginController() {
                 });
             });
 
-            // Sắp xếp theo tên Tiếng Việt
             studentsList.sort((a, b) => a.hoTen.localeCompare(b.hoTen, "vi"));
 
             studentsList.forEach((st) => {
@@ -104,17 +101,14 @@ function initLoginController() {
         }
     }
 
-    // Tự động tải nếu đã chọn lớp từ trước
     if (lopSelect.value) {
         loadStudents(lopSelect.value.trim());
     }
 
-    // Sự kiện chọn lớp
     lopSelect.addEventListener("change", (e) => {
         loadStudents(e.target.value.trim());
     });
 
-    // Sự kiện Đăng Nhập
     loginBtn.addEventListener("click", async (e) => {
         if (e) e.preventDefault();
         clearError();
@@ -149,7 +143,6 @@ function initLoginController() {
                     lop: userData.lop
                 }));
 
-                // Chuyển sang trang menu
                 window.location.href = "menu.html";
             } else {
                 showError("Mã PIN chưa đúng, con kiểm tra lại nhé!");
@@ -165,44 +158,111 @@ function initLoginController() {
 }
 
 // ============================================================
-// 3. XỬ LÝ CHO TRANG MENU KHÁM PHÁ (menu.html)
+// 2. XỬ LÝ TRANG MENU KHÁM PHÁ (menu.html)
 // ============================================================
 function initMenuController() {
     const welcomeName = document.getElementById("welcome-name");
-    const loadingMsg = document.getElementById("loading-msg");
+    const welcomeClass = document.getElementById("welcome-class");
     const logoutBtn = document.getElementById("logout-btn");
+    const lessonsSection = document.getElementById("lessons-section");
+    const lessonsList = document.getElementById("lessons-list");
+    const loadingMsg = document.getElementById("loading-msg");
+    const subjectTitle = document.getElementById("selected-subject-title");
 
-    // Nếu không có thẻ welcome-name (không ở trang menu.html) thì dừng lại
     if (!welcomeName) return;
 
     const currentUser = getCurrentUser();
 
-    // Bảo vệ trang: Nếu chưa đăng nhập thì đẩy về index.html
     if (!currentUser) {
         window.location.href = "index.html";
         return;
     }
 
-    // 1. Hiển thị tên học sinh lên header
     welcomeName.innerText = currentUser.hoTen;
+    if (welcomeClass) welcomeClass.innerText = `Lớp ${currentUser.lop}`;
 
-    // 2. Ẩn dòng chữ thông báo đồng bộ bài học
-    if (loadingMsg) {
-        loadingMsg.style.display = "none";
-    }
-
-    // 3. Gắn sự kiện nút Đăng xuất
     if (logoutBtn) {
         logoutBtn.addEventListener("click", () => {
             localStorage.removeItem("currentUser");
             window.location.href = "index.html";
         });
     }
+
+    // Đọc trực tiếp Document môn học từ Firebase ngan_hang_de
+    async function fetchSubjectData(subjectId, subjectDisplayName) {
+        if (!lessonsSection || !lessonsList) return;
+
+        lessonsSection.style.display = "block";
+        subjectTitle.innerText = `Môn ${subjectDisplayName} - Bộ câu hỏi ôn tập`;
+        lessonsList.innerHTML = "";
+        
+        if (loadingMsg) {
+            loadingMsg.innerText = "Đang lấy bộ câu hỏi từ máy chủ...";
+            loadingMsg.style.display = "block";
+        }
+
+        try {
+            // Lấy Document trực tiếp theo ID (VD: 'tieng_viet', 'toan', 'tieng_Anh')
+            const docRef = doc(db, "ngan_hang_de", subjectId);
+            const docSnap = await getDoc(docRef);
+
+            if (loadingMsg) loadingMsg.style.display = "none";
+
+            if (!docSnap.exists()) {
+                lessonsList.innerHTML = `<p style="color: #718096; text-align: center; padding: 15px;">Chưa có dữ liệu bài tập cho môn ${subjectDisplayName}.</p>`;
+                return;
+            }
+
+            const data = docSnap.data();
+            const questions = data.danhSachCauHoi || [];
+
+            if (questions.length === 0) {
+                lessonsList.innerHTML = `<p style="color: #718096; text-align: center; padding: 15px;">Bộ câu hỏi môn ${subjectDisplayName} đang rỗng.</p>`;
+                return;
+            }
+
+            // Tạo thẻ bài tập hiển thị tổng số câu hỏi
+            const card = document.createElement("div");
+            card.style.cssText = "background: #ffffff; border: 1px solid #cbd5e0; border-radius: 10px; padding: 16px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05);";
+            
+            card.innerHTML = `
+                <div>
+                    <h4 style="margin: 0 0 6px 0; color: #2d3748; font-size: 1.1rem;">Đề luyện tập tổng hợp - ${subjectDisplayName}</h4>
+                    <p style="margin: 0; color: #4a5568; font-size: 0.9rem;">Bao gồm <strong>${questions.length} câu hỏi</strong> trắc nghiệm</p>
+                </div>
+                <button class="primary-btn" style="padding: 8px 16px; font-size: 0.9rem; width: auto; background-color: #3182ce;">Bắt đầu làm bài ➔</button>
+            `;
+
+            card.addEventListener("click", () => {
+                // Lưu bộ câu hỏi vào localStorage để trang quiz.html hiển thị
+                localStorage.setItem("currentQuiz", JSON.stringify({
+                    subjectId: subjectId,
+                    subjectName: subjectDisplayName,
+                    questions: questions
+                }));
+                window.location.href = "quiz.html";
+            });
+
+            lessonsList.appendChild(card);
+
+        } catch (err) {
+            console.error("Lỗi lấy dữ liệu môn học:", err);
+            if (loadingMsg) loadingMsg.style.display = "none";
+            lessonsList.innerHTML = `<p style="color: #e53e3e; text-align: center;">Lỗi tải bài học: ${err.message}</p>`;
+        }
+    }
+
+    // Sự kiện click chọn môn
+    const subjectCards = document.querySelectorAll(".subject-card");
+    subjectCards.forEach(card => {
+        card.addEventListener("click", () => {
+            const subjectId = card.getAttribute("data-subject-id");
+            const subjectName = card.getAttribute("data-subject-name");
+            if (subjectId) fetchSubjectData(subjectId, subjectName);
+        });
+    });
 }
 
-// ============================================================
-// KHỞI CHẠY TOÀN BỘ HỆ THỐNG
-// ============================================================
 function initApp() {
     initLoginController();
     initMenuController();
