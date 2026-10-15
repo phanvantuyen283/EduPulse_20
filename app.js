@@ -22,7 +22,7 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 // Google Apps Script Webhook URL (AppHook Gemini AI)
-const GAS_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzMVkPnk9KmLJY5mSUI-mOtfPdtyMkwsKz5x4b2cHqSaT4NfKcb1zdSCl8tXsF8xCY7/exec";
+const GAS_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbyyzrdLj4tidJllJzT_GYrWQWQYNluflaXM6rRViT5TVWaWUI--u9AErJ2IqlOfw7Z9/exec";
 
 let conversationHistory = [];
 
